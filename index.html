@@ -885,6 +885,14 @@ body.dark-mode thead th {
         flex-direction: column;
         position: relative;
     }
+
+    .chart-subtitle {
+        text-align: center;
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: var(--secondary-color);
+        margin-top: 8px; /* Espaço entre o gráfico e o subtítulo */
+    }
     /* ================================================================== */
     /* NOVOS ESTILOS PARA A TABELA DE DETALHAMENTO DE VENDAS */
     /* ================================================================== */
@@ -2713,7 +2721,7 @@ function updateVendaDiaChart(vendasFiltradas) {
     };
 
     const data = {
-        labels: sorted.map(([data]) => new Date(data + 'T00:00:00').toLocaleDateString('pt-BR')),
+        labels: sorted.map(([data]) => new Date(data + 'T00:00:00').getDate()),
         datasets: [{
             label: 'Venda Total',
             data: sorted.map(([, val]) => val),
