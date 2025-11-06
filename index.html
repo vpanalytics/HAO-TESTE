@@ -14,9 +14,21 @@
         <!-- ... outros scripts como Chart.js ... -->
 
     <!-- NOVOS SCRIPTS DO FIREBASE -->
-    <!-- O App principal do Firebase (sempre necessário) -->
+    <!-- O App principal do Firebase (sempre necessário ) -->
     <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-app-compat.js"></script>
-    <!-- Carrega o serviço do Firestore (banco de dados ) -->
+    
+    <!-- ========================================================== -->
+    <!--            INÍCIO DA ALTERAÇÃO (ADICIONAR SCRIPT )          -->
+    <!-- ========================================================== -->
+    
+    <!-- Carrega o serviço de Autenticação -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-auth-compat.js"></script>
+    
+    <!-- ========================================================== -->
+    <!--                       FIM DA ALTERAÇÃO                       -->
+    <!-- ========================================================== -->
+    
+    <!-- Carrega o serviço do Firestore (banco de dados  ) -->
     <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-firestore-compat.js"></script>
 
     <!-- Fonte do Google para um visual mais moderno -->
@@ -84,6 +96,7 @@
     .login-page-container {
         width: 100%;
         max-width: 950px;
+        max-height: 680px;
         background-color: var(--card-bg-color);
         border-radius: 16px;
         box-shadow: 0 10px 30px rgba(0,0,0,0.1);
@@ -189,15 +202,6 @@
         background-color: #0041a3;
     }
 
-    .login-image-container {
-        flex: 1.6;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        border-radius: 0%;
-        overflow: hidden;
-    }
-
 
     /* ============== ESTILOS DA TELA PRINCIPAL (DASHBOARD) ============== */
     .app-container {
@@ -214,6 +218,7 @@
     .main-header {
         display: flex;
         justify-content: space-between;
+        gap: 40px;
         align-items: center;
         background-color: var(--card-bg-color);
         padding: 15px 30px;
@@ -360,12 +365,32 @@
         padding: 25px;
         border-radius: 12px;
         box-shadow: var(--shadow);
-        height: 350px;
+        /* height: 350px;  <-- REMOVA OU COMENTE ESTA LINHA */
         display: flex;
         flex-direction: column;
         position: relative;
         min-height: 0;
     }
+
+
+
+    
+/* ========================================================== */
+/*      NOVA ABORDAGEM PARA SCROLL DOS GRÁFICOS DE LOJA       */
+/* ========================================================== */
+
+/* 1. Define uma altura fixa e scroll para os wrappers de gráficos com rolagem */
+.chart-wrapper.scrollable {
+    height: 450px; /* Altura fixa total do card */
+    overflow-y: auto;
+     /* Ativa o scroll vertical */
+}
+
+/* 2. Garante que o canvas dentro de um wrapper com scroll possa crescer */
+.chart-wrapper.scrollable canvas {
+    min-height: 400px; /* Altura mínima inicial */
+    height: auto !important; /* Permite que a altura seja definida pelo JS */
+}
 
     .chart-wrapper-tall {
         height: 450px;
@@ -498,7 +523,7 @@
         display: flex;
         justify-content: flex-end;
         gap: 15px;
-        align-items: center;
+        align-items: flex-end;
     }
     .form-actions button {
         width: auto;
@@ -745,6 +770,20 @@ body.dark-mode thead th {
         color: white;
     }
 
+body.dark-mode .login-page-container {
+        --card-bg-color: #ffffff; /* Fundo sempre branco */
+        --text-color: #172B4D;    /* Cor do texto sempre escura */
+        --secondary-color: #172B4D; /* Cor secundária sempre escura */
+        --border-color: #dfe1e6;   /* Cor da borda sempre clara */
+    }
+    
+    /* Garante que os inputs também não sejam afetados pelo modo escuro */
+    body.dark-mode .login-page-container input {
+        background-color: #ffffff;
+        color: #172B4D;
+        border-color: #dfe1e6;
+    }
+
     body.dark-mode .radio-group { border-color: #4a596a; }
     body.dark-mode .radio-group label { color: #8c9bab; }
     body.dark-mode .radio-group input[type="radio"]:checked + label { background-color: var(--primary-color); color: white; }
@@ -823,13 +862,15 @@ body.dark-mode thead th {
     .chart-canvas-container {
         position: relative;
         flex-grow: 1; /* Faz o contêiner do canvas ocupar o espaço restante */
+        width: 100%;
+        height: 92%;
     }
     .chart-canvas-container canvas {
         position: absolute;
         top: 0;
         left: 0;
         width: 100% !important;
-        height: 100% !important;
+        height: 92% !important;
     }
     .chart-header-controls {
         display: flex;
@@ -864,6 +905,27 @@ body.dark-mode thead th {
         background-color: var(--primary-color);
         color: #fff;
     }
+/* ========================================================== */
+/*      ABORDAGEM FINAL PARA SCROLL COM TÍTULO FIXO (v3.1)    */
+/* ========================================================== */
+
+/* 1. O novo contêiner do canvas é quem controla o scroll */
+.chart-canvas-container-scroll {
+    flex-grow: 1; /* Faz o contêiner ocupar o espaço restante abaixo do título */
+    position: relative;
+    overflow-y: auto; /* Aplica a barra de rolagem aqui */
+    
+    /* Adiciona o espaçamento para a barra de rolagem não colar na borda */
+    padding-right: 10px;
+    background-clip: content-box;
+}
+
+/* 2. O canvas pode crescer livremente dentro do contêiner de scroll */
+.chart-canvas-container-scroll canvas {
+    width: 100% !important;
+    height: auto !important; /* A altura será definida pelo JS */
+}
+
 
     /* ================================================================== */
     /* NOVOS ESTILOS PARA A LINHA MENSAL/ANUAL */
@@ -884,14 +946,6 @@ body.dark-mode thead th {
         display: flex;
         flex-direction: column;
         position: relative;
-    }
-
-    .chart-subtitle {
-        text-align: center;
-        font-size: 0.9rem;
-        font-weight: 500;
-        color: var(--secondary-color);
-        margin-top: 8px; /* Espaço entre o gráfico e o subtítulo */
     }
     /* ================================================================== */
     /* NOVOS ESTILOS PARA A TABELA DE DETALHAMENTO DE VENDAS */
@@ -1004,128 +1058,340 @@ body.dark-mode thead th {
     #tabela-detalhe-vendas thead tr:nth-child(3) th {
         top: 90px; /* A terceira linha (Pçs/$) gruda 90px abaixo (altura das duas primeiras) */
     }
+    /* ================================================================== */
+    /*        NOVOS ESTILOS PARA O FILTRO DA TABELA DE DETALHAMENTO     */
+    /* ================================================================== */
+    .multi-select-filter {
+        display: flex;
+        align-items: center;
+        gap: 15px; /* Espaço entre o label "Filtrar Lojas:" e os checkboxes */
+        padding: 10px 0 20px 0; /* Espaçamento vertical */
+        flex-wrap: wrap; /* Permite que os checkboxes quebrem a linha em telas pequenas */
+    }
+    .multi-select-filter label {
+        font-weight: 500;
+        white-space: nowrap; /* Impede que o label principal quebre */
+    }
+    #lojas-checkboxes {
+        display: flex;
+        gap: 20px; /* Espaço entre cada checkbox */
+        flex-wrap: wrap;
+    }
+    #lojas-checkboxes div { /* Contêiner de cada checkbox + label */
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    #lojas-checkboxes label { /* Label de cada loja individual */
+        font-weight: 400;
+        font-size: 0.9rem;
+        cursor: pointer;
+    }
+    #lojas-checkboxes input[type="checkbox"] {
+        width: auto; /* Reseta a largura do input para o tamanho padrão */
+        cursor: pointer;
+    }
 
+/* ========================================================== */
+/*         ESTILO E POSICIONAMENTO DO BOTÃO DE REFRESH        */
+/* ========================================================== */
+
+/* 1. Garante que o contêiner de filtros posicione o botão à direita */
+.filters-container {
+    justify-content: space-between;
+}
+
+/* 2. Estiliza o botão para o padrão do sistema (desktop ) */
+#refresh-dashboard-btn {
+    background-color: var(--primary-color); /* Cor azul primária */
+    border: none;
+    color: #ffffff; /* Cor do ícone branca */
+    border-radius: 8px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+/* 3. Efeito hover para desktop */
+#refresh-dashboard-btn:hover {
+    background-color: #0041a3; /* Tom de azul mais escuro */
+    transform: rotate(90deg); /* Efeito de rotação */
+}
+
+#refresh-dashboard-btn svg {
+    pointer-events: none;
+}
+
+/* ========================================================== */
+/*     CONTROLE DE VISIBILIDADE (DESKTOP vs MOBILE)           */
+/* ========================================================== */
+
+/* 4. Esconde o botão por padrão em telas pequenas (mobile-first) */
+@media (max-width: 768px) {
+    #refresh-dashboard-btn {
+        display: none;
+    }
+}
+
+    
 /* ================================================================== */
-/* ================================================================== */
-/*        INÍCIO DAS REGRAS DE LAYOUT RESPONSIVO (MOBILE)             */
-/* ================================================================== */
+/*        REGRAS DE LAYOUT RESPONSIVO (MOBILE) - VERSÃO MELHORADA     */
 /* ================================================================== */
 
-/* Aplica estes estilos em telas com largura máxima de 768px (padrão para tablets e celulares) */
 @media (max-width: 768px) {
 
-    /* --- AJUSTES NA TELA DE LOGIN --- */
-
-    /* 1. Centraliza o container de login e permite scroll */
-    .login-screen-wrapper {
-        display: block; /* Remove o flexbox para permitir scroll */
-        padding: 20px 0; /* Espaço no topo e na base */
-        animation: none; /* Remove a animação de fundo para economizar bateria */
-    }
-    .login-page-container {
-        flex-direction: column; /* Empilha a imagem e o formulário */
-        margin: 20px auto; /* Centraliza o card na tela */
-    }
-    .login-container {
-        padding: 30px; /* Reduz o padding interno no mobile */
-    }
-    .login-image-container {
-        max-height: 250px; /* Limita a altura da imagem no mobile */
-    }
+    /* --- AJUSTES GERAIS DE ESPAÇAMENTO --- */
+    .app-container { padding: 10px; }
+    .filters-container { flex-direction: column; gap: 20px; padding: 20px; }
 
 
-    /* --- AJUSTES NO CABEÇALHO PRINCIPAL (HEADER) --- */
-    
-    /* 2. Reorganiza o cabeçalho: Logos, Título, Navegação */
+    /* --- 1. MELHORIAS NO CABEÇALHO PRINCIPAL (HEADER) --- */
+
+    /* Container principal do header */
     .main-header {
-        flex-direction: column; /* Empilha todos os elementos */
-        gap: 20px; /* Espaço entre os blocos (logos, navegação, etc) */
+        flex-direction: column; /* Mantém o empilhamento dos blocos */
+        align-items: flex-start; /* ALINHA TUDO À ESQUERDA */
+        gap: 20px;
         padding: 20px;
     }
+
+    /* Bloco de Logos e Título */
     .header-title-container {
         flex-direction: column; /* Empilha logos e título */
+        align-items: flex-start; /* Alinha o conteúdo à esquerda */
         gap: 15px;
     }
-    .header-controls {
-        flex-direction: column; /* Empilha navegação e botões (tema/sair) */
-        width: 100%;
-        gap: 15px;
-    }
-    .main-header nav ul {
-        justify-content: center; /* Centraliza os itens da navegação */
-        flex-wrap: wrap; /* Permite que os botões quebrem a linha se não couberem */
-        width: 100%;
-    }
-
-
-    /* --- AJUSTES NOS CARDS E GRÁFICOS --- */
-
-    /* 3. Cards: 1 por fileira */
-    .cards-container {
-        grid-template-columns: 1fr; /* Força uma única coluna */
-        gap: 20px; /* Reduz o espaçamento */
-    }
-
-    /* 4. Gráficos: 1 por fileira */
-    .charts-container,
-    .charts-container-3-cols {
-        grid-template-columns: 1fr; /* Força uma única coluna para todos os contêineres de gráficos */
+    
+    /* ADICIONADO: Container apenas para as logos */
+    .header-logos {
+        display: flex;
+        align-items: center;
         gap: 20px;
     }
-    .charts-row {
-        flex-direction: column; /* Empilha os gráficos de Venda Mensal e Anual */
+
+    /* Bloco de Controles (Navegação e Botões) */
+    .header-controls {
+        flex-direction: column; /* Empilha a navegação e os botões de ação */
+        align-items: flex-start; /* Alinha tudo à esquerda */
+        width: 100%;
+        gap: 15px;
     }
 
+   /* Transforma a lista <ul> em um container de grid */
+    .main-header nav ul {
+        display: grid; /* Usa o layout de Grid */
+        grid-template-columns: 1fr 1fr; /* Cria duas colunas de largura igual */
+        gap: 10px; /* Espaço entre os botões */
+        width: 135%; /* Ocupa toda a largura disponível */
+        padding: 0; /* Remove o padding padrão da lista */
+    }
 
-    /* --- AJUSTES NOS FORMULÁRIOS (VENDAS E LOJAS) --- */
+    /* Faz o item da lista <li> ocupar todo o espaço do seu grid-cell */
+    .main-header nav li {
+        display: contents; /* Remove o <li> do fluxo de layout, passando as propriedades do grid para o <a> */
+    }
+
+    /* Estiliza o botão <a> para preencher o espaço e centralizar o texto */
+    .main-header nav a {
+        width: 100%; /* Ocupa 100% da largura da célula do grid */
+        text-align: center; /* Centraliza o texto dentro do botão */
+        box-sizing: border-box; /* Garante que o padding não afete a largura total */
+    }
     
-    /* 5. Formulários: 1 campo por fileira */
-    form {
-        grid-template-columns: 1fr; /* Força uma única coluna para todos os campos */
+    /* ADICIONADO: Container para os botões de Tema e Sair */
+    .header-action-buttons {
+        display: flex;
+        gap: 15px;
     }
-    /* Ajusta o posicionamento dos botões de ação nos formulários */
+
+   #tabela-produtos {
+        table-layout: auto; /* Permite que o navegador calcule a largura das colunas */
+        width: 100%; /* Garante que a tabela tente ocupar o espaço disponível */
+    }
+
+    /* Define uma largura mínima para cada coluna para evitar que fiquem espremidas */
+    #tabela-produtos th,
+    #tabela-produtos td {
+        white-space: nowrap; /* Impede que o texto quebre, forçando o scroll */
+    }
+
+    #tabela-produtos th:nth-child(1),
+    #tabela-produtos td:nth-child(1) { min-width: 150px; } /* Modelo */
+
+    #tabela-produtos th:nth-child(2),
+    #tabela-produtos td:nth-child(2) { min-width: 120px; } /* Valor */
+
+    #tabela-produtos th:nth-child(3),
+    #tabela-produtos td:nth-child(3) { min-width: 70px; }  /* Ação */
+
+    #tabela-produtos th:nth-child(4),
+    #tabela-produtos td:nth-child(4) { min-width: 150px; } /* Última Alteração */
+
+    #tabela-produtos th:nth-child(5),
+    #tabela-produtos td:nth-child(5) { min-width: 70px; }  /* Status */
+    /* --- AJUSTES NOS GRÁFICOS --- */
+
+    /* Mantém 1 gráfico por fileira */
+    .cards-container,
+    .charts-container,
+    .charts-container-3-cols {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    /* 2. SCROLL HORIZONTAL PARA GRÁFICOS DE LINHA */
+    #venda-dia-container,
+    #venda-semana-container {
+        overflow-x: auto; /* Adiciona o scroll no eixo X */
+        -webkit-overflow-scrolling: touch;
+    }
+    /* Força o canvas a ter uma largura mínima para que o scroll funcione */
+    #venda-dia-chart,
+    #venda-semana-chart {
+        min-width: 200px;
+    }
+
+    /* 3. ALTURA CORRETA PARA GRÁFICOS MENSAL/ANUAL */
+    .charts-row {
+        flex-direction: row; /* Empilha os gráficos */
+    }
+    .chart-wrapper-flex {
+        height: 450px; /* Define a mesma altura dos outros gráficos de barra */
+    }
+
+    /* --- 5. AJUSTES NOS FORMULÁRIOS (VENDAS, LOJAS) --- */
+    
+    /* Garante 1 campo por fileira */
+    #form-cadastro-produto {
+        grid-template-columns: 1fr;
+    }
+
+    /* Força CADA FILHO do formulário a ocupar a linha inteira */
+    #form-cadastro-produto > div {
+        grid-column: 1 / -1 !important; /* !important para garantir a sobreposição */
+    }
+
+    /* Centraliza os botões no contêiner que agora ocupa a largura toda */
+    #form-cadastro-produto .form-actions {
+        justify-content: flex-start;
+    }
+    
     .form-vendas-grid .form-actions,
     .form-actions-loja-ajustado {
-        grid-column: 1 / -1; /* Faz os botões ocuparem a largura total */
-        justify-content: center; /* Centraliza os botões */
+        grid-column: 1 / -1;
+        justify-content: center;
     }
-    
+    /* Garante que os campos de lançamento de venda fiquem em ordem */
+    #form-lancamento .form-group {
+        grid-column: 1 / -1; /* Força cada campo a ocupar a linha inteira */
+    }
 
-    /* --- AJUSTES NAS TABELAS (PRODUTOS, VENDAS, ETC.) --- */
 
-    /* 6. Tabelas: Scroll horizontal */
-    /* A classe .table-container já tem overflow, mas garantimos o comportamento */
+    /* --- 6. AJUSTES NAS TABELAS --- */
+
     .table-container {
         overflow-x: auto; /* Garante o scroll lateral */
-        -webkit-overflow-scrolling: touch; /* Melhora a experiência de scroll em iOS */
+        -webkit-overflow-scrolling: touch;
     }
-    /* Reduz o padding das células para caber mais informação na tela */
     th, td {
         padding: 12px 10px;
         font-size: 0.9rem;
     }
-    /* Ajuste específico para a tabela de detalhamento para não ficar muito larga */
+    /* Ajustes específicos para a tabela de detalhamento */
     #tabela-detalhe-vendas th, 
-    #tabela-detalhe-vendas td {
-        min-width: 60px; /* Reduz a largura mínima das colunas */
-    }
-    #tabela-detalhe-vendas .row-header-dia {
-        min-width: 120px; /* Reduz a largura da primeira coluna fixa */
-    }
+    #tabela-detalhe-vendas td { min-width: 60px; }
+    #tabela-detalhe-vendas .row-header-dia { min-width: 120px; }
 
 
-    /* --- AJUSTES GERAIS DE ESPAÇAMENTO --- */
-    .app-container {
-        padding: 10px; /* Reduz o padding geral da aplicação */
+    .login-screen-wrapper {
+        display: block;            /* Comportamento de bloco padrão, ESSENCIAL para o scroll */
+        position: static;          /* Remove a posição fixa que pode travar o scroll */
+        height: auto;              /* A altura se ajusta ao conteúdo */
+        min-height: 100vh;         /* Garante que o fundo ocupe PELO MENOS a tela inteira */
+        padding: 40px 20px;        /* Adiciona margens internas para o conteúdo não colar nas bordas */
+        box-sizing: border-box;    /* Garante que o padding não cause overflow */
+        animation: none;           /* Desativa a animação no mobile */
     }
-    .filters-container {
-        flex-direction: column; /* Empilha os filtros */
-        gap: 20px;
-        padding: 20px;
+
+    .login-container {
+        padding: 40px 25px;
     }
+
+    /* 2. Ajusta o card de login branco */
+    .login-page-container {
+        flex-direction: column;    /* Mantém os itens internos empilhados */
+        margin: auto;              /* Centraliza o card horizontalmente e permite margem vertical automática */
+        width: 100%;               /* Ocupa a largura disponível */
+        max-width: 500px;          /* Limita a largura máxima */
+    }
+        .login-image-container {
+        display: none;
+    }}
+
+    /* ========================================================== */
+/*      NOVOS ESTILOS PARA O SCROLL DOS GRÁFICOS DE LOJA      */
+/* ========================================================== */
+
+.chart-scroll-container {
+    position: relative;
+    height: 100%; /* Ocupa a altura restante do .chart-wrapper */
+    overflow-y: auto; /* Adiciona a barra de rolagem vertical quando necessário */
 }
 
+/* Garante que o canvas possa crescer internamente */
+.chart-scroll-container canvas {
+    position: relative !important;
+    width: 100% !important;
+    height: auto !important; /* A altura será definida via JS */
+}
 
+/* ========================================================== */
+/*      ESTILOS FINAIS E ISOLADOS PARA GRÁFICOS COM SCROLL    */
+/* ========================================================== */
+
+/* 1. Define a altura fixa APENAS para os wrappers com a classe de scroll */
+.chart-wrapper.chart-wrapper-scrollable {
+    height: 450px;
+}
+
+/* 2. O contêiner interno controla a área de rolagem */
+.chart-scroll-area {
+    flex-grow: 1; 
+    position: relative;
+    overflow-y: auto; 
+    
+    padding-right: 10px;
+    background-clip: content-box;
+}
+
+/* 3. O canvas dentro da área de scroll pode crescer */
+.chart-scroll-area canvas {
+    width: 100% !important;
+    height: auto !important; 
+}
+/* ================================================================== */
+/*      BLOCO DE ANULAÇÃO PARA GARANTIR O GRÁFICO DE LINHA        */
+/* ================================================================== */
+
+/* 
+  Esta regra garante que o contêiner do gráfico de Dia/Semana
+  NÃO seja afetado pelas configurações de scroll dos outros gráficos,
+  forçando-o a voltar ao seu estado original.
+*/
+.charts-container .chart-wrapper .chart-canvas-container {
+    position: relative !important;
+    flex-grow: 1 !important;
+    height: 92% !important; /* Força a altura original */
+    overflow: visible !important; /* Garante que não haja scroll indesejado */
+    padding: 0 !important; /* Remove qualquer padding que possa ter sido herdado */
+}
+#temporal-chart-container {
+    display: block; /* Anula o "display: grid" da classe .charts-container */
+}
 </style>
 </head>
 <body>
@@ -1165,11 +1431,20 @@ body.dark-mode thead th {
     <!-- ======================= TELA PRINCIPAL (HTML  ) ======================= -->
     <div id="app-screen" class="app-container hidden">
         <header class="main-header">
+            <!-- ========================================================== -->
+            <!--            BLOCO 1: TUDO QUE FICA NA ESQUERDA              -->
+            <!-- ========================================================== -->
             <div class="header-title-container">
-                <img src="https://victorpaulovichbueno-gif.github.io/logo-HAO/logohao" alt="Logo Haojue" style="height: 35px;">
-                <img src="https://assets.decocache.com/cvlbinsticiona/883934cf-cd5a-4b86-ac4c-d3504faa99ab/logo-inst-desk.svg" alt="Logo Casa & Vídeo" style="height: 40px;">
+                <div class="header-logos">
+                    <img src="https://victorpaulovichbueno-gif.github.io/logo-HAO/logohao" alt="Logo Haojue" style="height: 35px;">
+                    <img src="https://assets.decocache.com/cvlbinsticiona/883934cf-cd5a-4b86-ac4c-d3504faa99ab/logo-inst-desk.svg" alt="Logo Casa & Vídeo" style="height: 40px;">
+                </div>
                 <h2>Controle de Venda</h2>
             </div>
+
+            <!-- ========================================================== -->
+            <!--            BLOCO 2: TUDO QUE FICA NA DIREITA               -->
+            <!-- ========================================================== -->
             <div class="header-controls">
                 <nav>
                     <ul>
@@ -1179,6 +1454,7 @@ body.dark-mode thead th {
                         <li><a href="#produtos" class="nav-tab" data-tab="produtos">Produtos</a></li>
                     </ul>
                 </nav>
+
                 <button id="theme-toggle-btn" title="Alternar tema">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-moon"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.7.79z"></path></svg>
                 </button>
@@ -1196,6 +1472,12 @@ body.dark-mode thead th {
                         <label for="filter-year">Ano:</label>
                         <select id="filter-year"></select>
                     </div>
+                            <button id="refresh-dashboard-btn" title="Recarregar Dados">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+            </svg>
+        </button>
                 </div>
                 <div class="cards-container">
                     <div class="card"><h3 id="card-venda-total-label">Venda Total</h3><p id="card-venda-total">R$ 0,00</p></div>
@@ -1204,39 +1486,70 @@ body.dark-mode thead th {
                     <div class="card"><h3 id="card-venda-media-label">Venda Média/Dia</h3><p id="card-venda-media">R$ 0,00</p></div>
                 </div>
                 
-                <div class="charts-container-3-cols">
-                    <div class="chart-wrapper chart-wrapper-tall"><div class="chart-title">Ranking de Unidades Vendidas por Modelo</div><canvas id="ranking-modelo-chart"></canvas></div>
-                    <div class="chart-wrapper chart-wrapper-tall"><div class="chart-title"> Ranking de Unidades Vendidas por Loja</div><canvas id="ranking-lojas-chart"></canvas></div>
-                    <div class="chart-wrapper chart-wrapper-tall"><div class="chart-title">Share de Vendas por Loja</div><canvas id="participacao-lojas-chart"></canvas></div>
-                </div>
+<div class="charts-container-3-cols">
+    <!-- Gráfico de Modelo (inalterado) -->
+    <div class="chart-wrapper chart-wrapper-tall">
+        <div class="chart-title"> Unidades Vendidas por Modelo</div>
+        <canvas id="ranking-modelo-chart"></canvas>
+    </div>
+    
+    <!-- Gráfico de Loja 1 com estrutura de scroll -->
+    <div class="chart-wrapper chart-wrapper-scrollable">
+        <div class="chart-title"> Unidades Vendidas por Loja</div>
+        <div class="chart-scroll-area">
+            <canvas id="ranking-lojas-chart"></canvas>
+        </div>
+    </div>
+
+    <!-- Gráfico de Loja 2 com estrutura de scroll -->
+    <div class="chart-wrapper chart-wrapper-scrollable">
+        <div class="chart-title">Share de Vendas por Loja</div>
+        <div class="chart-scroll-area">
+            <canvas id="participacao-lojas-chart"></canvas>
+        </div>
+    </div>
+</div>
+
+
+
+
                 <div class="charts-container-3-cols">
                     <div class="chart-wrapper chart-wrapper-tall"><div class="chart-title">Unidades Vendidas por Tipo de Loja</div><canvas id="venda-tipo-loja-chart"></canvas></div>
                     <div class="chart-wrapper chart-wrapper-tall"><div class="chart-title">Unidades Vendidas por GRC</div><canvas id="ranking-grc-chart"></canvas></div>
-                    <div class="chart-wrapper chart-wrapper-tall"><div class="chart-title">Unidades Vendidas por Forma de Pagamento</div><canvas id="venda-forma-pagamento-chart"></canvas></div>
+                    <div class="chart-wrapper chart-wrapper-tall"><div class="chart-title">Unidades Vendidas por Modalidade </div><canvas id="venda-forma-pagamento-chart"></canvas></div>
                 </div>
-                <!-- GRÁFICOS TEMPORAIS UNIFICADOS -->
-                <!-- GRÁFICOS TEMPORAIS UNIFICADOS -->
-                <div class="charts-container">
-                    <div class="chart-wrapper">
-                        <!-- Cabeçalho com Título e Botões -->
-                        <div class="chart-header-controls">
-                            <!-- ALTERAÇÃO: Removido o style="text-align: left;" -->
-                            <div id="temporal-chart-title" class="chart-title" style="margin-bottom: 0;">Venda por Dia</div>
-                            <div class="chart-toggle-buttons">
-                                <button id="toggle-dia-btn" class="toggle-btn active">Dia</button>
-                                <button id="toggle-semana-btn" class="toggle-btn">Semana</button>
-                            </div>
-                        </div>
+<!-- ========================================================== -->
+<!-- ========================================================== -->
+<!--           CORREÇÃO FINAL: ISOLAMENTO COM ID                -->
+<!-- ========================================================== -->
+<!-- GRÁFICOS TEMPORAIS UNIFICADOS -->
+<!-- Adicionado um ID para criar uma regra de CSS exclusiva -->
+<div id="temporal-chart-container" class="charts-container">
+    <div class="chart-wrapper">
+        <!-- Cabeçalho com Título e Botões -->
+        <div class="chart-header-controls">
+            <div id="temporal-chart-title" class="chart-title" style="margin-bottom: 0;">Venda por Dia</div>
+            <div class="chart-toggle-buttons">
+                <button id="toggle-dia-btn" class="toggle-btn active">Dia</button>
+                <button id="toggle-semana-btn" class="toggle-btn">Semana</button>
+            </div>
+        </div>
 
-                        <!-- Contêiner para os Canvas (um visível, outro escondido) -->
-                        <div id="venda-dia-container" class="chart-canvas-container">
-                            <canvas id="venda-dia-chart"></canvas>
-                        </div>
-                        <div id="venda-semana-container" class="chart-canvas-container hidden">
-                            <canvas id="venda-semana-chart"></canvas>
-                        </div>
-                    </div>
-                </div>
+        <!-- Contêiner para os Canvas (estrutura original) -->
+        <div id="venda-dia-container" class="chart-canvas-container">
+            <canvas id="venda-dia-chart"></canvas>
+        </div>
+        <div id="venda-semana-container" class="chart-canvas-container hidden">
+            <canvas id="venda-semana-chart"></canvas>
+        </div>
+    </div>
+</div>
+<!-- ========================================================== -->
+<!--                        FIM DA CORREÇÃO                       -->
+<!-- ========================================================== -->
+
+
+
 
 
                                 <!-- GRÁFICOS MENSAL E ANUAL NA MESMA LINHA -->
@@ -1269,7 +1582,10 @@ body.dark-mode thead th {
                     <div class="table-legend" style="margin-bottom: 20px;">
                         <span class="legend-item"><span class="legend-color-box" style="background-color: #ffab00;"></span> Dia de Inauguração</span>
                     </div>
-
+                    <div class="filter-group" style="padding: 10px 0 20px 0;">
+                        <label for="detalhe-loja-filter">Loja:</label>
+                        <select id="detalhe-loja-filter"></select>
+                    </div>
                     <!-- Contêiner da Tabela Matriz -->
                     <div class="table-container" style="max-height: none; overflow-x: auto;">
                         <table id="tabela-detalhe-vendas">
@@ -1279,7 +1595,6 @@ body.dark-mode thead th {
                     </div>
                 </div>
 
-                        
                     
                     <!-- Contêiner da Tabela Matriz -->
                     <div class="table-container" style="max-height: 900px; overflow-x: auto;">
@@ -1307,11 +1622,19 @@ body.dark-mode thead th {
                         <input type="text" id="venda-tipo-loja-display" readonly>
                     </div>
                     <div class="form-group">
-                        <label for="venda-modelo">Modelo Vendido</label>
+                        <label for="venda-modelo">Item</label>
                         <select id="venda-modelo" required></select>
                     </div>
 
                     <div class="form-group"><label for="venda-valor">Valor da Venda</label><input type="number" id="venda-valor" step="0.01" required></div>
+                                        <div class="form-group">
+                        <label for="venda-modelo-venda">Modelo de Venda</label>
+                        <select id="venda-modelo-venda" required>
+                            <option value="">Selecione o modelo</option>
+                            <option value="CASA+">CASA+</option>
+                            <option value="Store in Store">Store in Store</option>
+                        </select>
+                    </div>                    
                     <div class="form-group">
                         <label for="venda-forma-pagamento">Forma de Pagamento</label>
                         <select id="venda-forma-pagamento" required></select>
@@ -1353,7 +1676,20 @@ body.dark-mode thead th {
                 <div class="table-wrapper">
                     <div class="table-container">
                         <table id="tabela-vendas">
-                            <thead><tr><th>Data</th><th>Loja</th><th>Modelo</th><th>Valor</th><th>Qtd</th><th>Venda Total</th><th>Ações</th></tr></thead>
+                             <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Loja</th>
+                                    <th>Tipo Loja</th>
+                                    <th>Modelo</th>
+                                    <th>Valor Unit.</th>
+                                    <th>Modelo Venda</th>
+                                    <th>Forma Pag.</th>
+                                    <th>Qtd</th>
+                                    <th>Venda Total</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
                             <tbody id="tabela-vendas-body"></tbody>
                         </table>
                     </div>
@@ -1372,14 +1708,23 @@ body.dark-mode thead th {
                     <!-- BLOCO 1: CORREÇÃO NO HTML (Formulário de Lojas)                  -->
                     <!-- ================================================================== -->
 
-                    <div class="form-group">
-                        <label for="loja-tipo">Tipo da Loja</label>
-                        <select id="loja-tipo" required>
-                            <option value="">Selecione o tipo</option>
-                            <option value="Shopping">Shopping</option>
-                            <option value="Rua">Rua</option>
-                        </select>
-                    </div>
+            <div class="form-group">
+                <label for="loja-tipo">Tipo da Loja</label>
+                <select id="loja-tipo" required>
+                    <option value="">Selecione o tipo</option>
+                    <option value="Shopping">Shopping</option>
+                    <option value="Rua">Rua</option>
+                    <!-- ========================================================== -->
+                    <!--                    INÍCIO DA ALTERAÇÃO                     -->
+                    <!-- ========================================================== -->
+                    <option value="Mercado">Mercado</option>
+                    <option value=".PERTO">.PERTO</option>
+                    <!-- ========================================================== -->
+                    <!--                     FIM DA ALTERAÇÃO                       -->
+                    <!-- ========================================================== -->
+                </select>
+            </div>
+
 
                     <div class="form-group"><label for="loja-data-inauguracao">Data de Inauguração</label><input type="date" id="loja-data-inauguracao" required></div>
                     <div class="form-group"><label for="loja-grc">GRC (Gerente)</label><input type="text" id="loja-grc" required></div>
@@ -1392,31 +1737,78 @@ body.dark-mode thead th {
                 <h2>Lojas Cadastradas</h2>
                 <h3 id="subtitulo-lojas" style="font-weight: 400; font-size: 1rem; margin-top: -15px; margin-bottom: 20px;"></h3>
                 <div class="table-wrapper">
-                    <table id="tabela-lojas">
-                        <thead><tr><th>Loja</th><th>Bloco</th><th>Data Inauguração</th><th>GRC (Gerente)</th><th>Ações</th></tr></thead>
-                        <tbody id="tabela-lojas-body"></tbody>
-                    </table>
+                    <!-- Adicione este DIV para habilitar o scroll -->
+                    <div class="table-container">
+                        <table id="tabela-lojas">
+                            <thead><tr><th>Loja</th><th>Bloco</th><th>Data Inauguração</th><th>GRC (Gerente)</th><th>Ações</th></tr></thead>
+                            <tbody id="tabela-lojas-body"></tbody>
+                        </table>
+                    </div>
                 </div>
             </section>
 
             <!-- SEÇÃO 4: PRODUTOS -->
             <section id="produtos" class="tab-content">
-                <h2>Produtos Cadastrados</h2>
-                <div class="table-wrapper">
-                    <table id="tabela-produtos">
-                        <thead>
-                            <tr>
-                                <th>Modelo</th>
-                                <th>Valor</th>
-                                <th>Ação</th>
-                                <th>Última Alteração</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="produtos-lista-body"></tbody>
-                    </table>
+                <!-- ========================================================== -->
+                <!--             INÍCIO DA ATUALIZAÇÃO DA SEÇÃO PRODUTOS         -->
+                <!-- ========================================================== -->
+
+                <!-- 1. CABEÇALHO COM TÍTULO E BOTÃO DE CADASTRO -->
+                                <div class="table-header-controls">
+                    <h2>Produtos Cadastrados</h2>
+                    <!-- ESCONDE O BOTÃO ADICIONANDO A CLASSE 'hidden' -->
+                    <button id="show-produto-form-btn" class="btn-cancel hidden" style="background-color: var(--success-color);">Cadastrar Novo Modelo</button>
                 </div>
+
+                <!-- 2. FORMULÁRIO DE CADASTRO (AGORA VISÍVEL) -->
+                <!-- REMOVE A CLASSE 'hidden' DO FORMULÁRIO -->
+                <form id="form-cadastro-produto" style="margin-bottom: 20px;">
+                    <h2 id="produto-form-title" style="margin-top: 0;">Cadastrar Novo Produto</h2>
+                    
+                    <div id="produto-error-msg" class="hidden"></div>
+                    
+                    <div class="form-group" style="grid-column: 1 / 3;">
+                        <label for="produto-modelo">Nome do Modelo</label>
+                        <input type="text" id="produto-modelo" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="produto-valor">Valor Padrão</label>
+                        <input type="number" id="produto-valor" step="0.01" required min="0">
+                    </div>
+
+                    <div class="form-actions" style="grid-column: 4 / 5;">
+                        <!-- O botão de cancelar agora apenas limpa o formulário -->
+                         <button type="submit" id="produto-submit-btn">Cadastrar</button>
+                        <button type="button" id="cancel-produto-form-btn" class="btn-cancel">Limpar</button>
+                        
+                    </div>
+                </form>
+
+                <hr>
+                <!-- ========================================================== -->
+
+                <!-- 3. TABELA DE PRODUTOS (EXISTENTE) -->
+                <div class="table-wrapper">
+                    <div class="table-container">
+                        <table id="tabela-produtos">
+                            <thead>
+                                <tr>
+                                    <th>Modelo</th>
+                                    <th>Valor</th>
+                                    <th>Ação</th>
+                                    <th>Última Alteração</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="produtos-lista-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- ========================================================== -->
+                <!--                  FIM DA ATUALIZAÇÃO                      -->
+                <!-- ========================================================== -->
             </section>
+
 
         </main>
     </div>
@@ -1450,7 +1842,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 // Pega uma referência ao serviço do banco de dados (Firestore)
 const db = firebase.firestore();
-
+const auth = firebase.auth();
 // --- FIM DA CONFIGURAÇÃO DO FIREBASE ---
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -1503,6 +1895,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Elementos da Seção Produtos
     const produtosListaBody = document.getElementById('produtos-lista-body');
     const modal = document.getElementById('confirm-modal');
+
+    const showProdutoFormBtn = document.getElementById('show-produto-form-btn');
+    const produtoForm = document.getElementById('form-cadastro-produto');
+    const cancelProdutoFormBtn = document.getElementById('cancel-produto-form-btn');
+    const produtoErrorMsg = document.getElementById('produto-error-msg');
+
     const modalMessage = document.getElementById('modal-message');
     const modalConfirmBtn = document.getElementById('modal-confirm-btn');
     const modalCancelBtn = document.getElementById('modal-cancel-btn');
@@ -1516,6 +1914,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const vendasFilterLoja = document.getElementById('vendas-filter-loja');
     const clearVendasFiltersBtn = document.getElementById('clear-vendas-filters-btn');
 
+        const refreshDashboardBtn = document.getElementById('refresh-dashboard-btn');
+
+    // Adiciona uma verificação para o caso do elemento não existir
+    if (refreshDashboardBtn) {
+        // 2. Adiciona o evento de clique
+        refreshDashboardBtn.addEventListener('click', () => {
+            // 3. Recarrega a página inteira, simulando um F5
+            location.reload();
+        });
+    }
     // --- BANCO DE DADOS (localStorage) e ESTADO DA SESSÃO ---
     let lojas = [];
     let vendas = [];
@@ -1534,6 +1942,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const detalheVendasBody = document.getElementById('detalhe-vendas-body');
     const detalheVendasTitulo = document.getElementById('detalhe-vendas-titulo');
     const lojasCheckboxesContainer = document.getElementById('lojas-checkboxes');
+    
     const detalheLojaFilter = document.getElementById('detalhe-loja-filter');
 
     async function loadDataFromFirebase() {
@@ -1585,35 +1994,76 @@ document.addEventListener('DOMContentLoaded', () => {
         applyTheme(currentTheme === 'light' ? 'dark' : 'light');
     });
 
-    // --- LÓGICA DE AUTENTICAÇÃO E SESSÃO ---
-    function checkLogin() {
-        applyTheme(localStorage.getItem('theme'));
-        if (sessionStorage.getItem('loggedIn') === 'true') {
+// ==========================================================
+//         INÍCIO DA ALTERAÇÃO (VERIFICAÇÃO DE SESSÃO)
+// ==========================================================
+function checkLogin() {
+    applyTheme(localStorage.getItem('theme'));
+
+    // onAuthStateChanged é um "ouvinte" que dispara sempre que o estado
+    // de login do usuário muda (login, logout, página recarregada).
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            // O usuário ESTÁ logado.
+            console.log('Sessão ativa para:', user.email);
             showApp();
         } else {
+            // O usuário NÃO ESTÁ logado.
+            console.log('Nenhum usuário logado.');
             showLogin();
         }
-    }
+    });
+}
+// ==========================================================
+//                       FIM DA ALTERAÇÃO
+// ==========================================================
 
-    loginForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
 
-        if (username === 'hao' && password === '123') {
-            sessionStorage.setItem('loggedIn', 'true');
-        
-        location.reload();
-        loadDataFromLocalStorage();
-        } else {
+// ==========================================================
+//            INÍCIO DA ALTERAÇÃO (FUNÇÃO DE LOGIN)
+// ==========================================================
+loginForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const email = document.getElementById('username').value; // Agora é um e-mail
+    const password = document.getElementById('password').value;
+
+    // Usa a função do Firebase para fazer login
+    auth.signInWithEmailAndPassword(email, password)
+        .then((userCredential) => {
+            // Login bem-sucedido!
+            // Não precisamos mais do sessionStorage, o Firebase cuida disso.
+            console.log('Login bem-sucedido:', userCredential.user);
+            showApp(); // Mostra a tela principal da aplicação
+        })
+        .catch((error) => {
+            // Ocorreu um erro
+            console.error('Erro no login:', error);
+            loginError.textContent = "E-mail ou senha inválidos."; // Mensagem de erro genérica
             loginError.classList.remove('hidden');
-        }
-    });
+        });
+});
+// ==========================================================
+//                       FIM DA ALTERAÇÃO
+// ==========================================================
 
-    logoutButton.addEventListener('click', () => {
-        sessionStorage.removeItem('loggedIn');
-        showLogin();
+
+// ==========================================================
+//           INÍCIO DA ALTERAÇÃO (FUNÇÃO DE LOGOUT)
+// ==========================================================
+logoutButton.addEventListener('click', () => {
+    auth.signOut().then(() => {
+        // Logout bem-sucedido.
+        console.log('Usuário deslogado.');
+        // Não precisa chamar showLogin(), o onAuthStateChanged fará isso.
+        location.reload(); // A forma mais simples de resetar o estado da aplicação
+    }).catch((error) => {
+        console.error('Erro ao fazer logout:', error);
     });
+});
+// ==========================================================
+//                       FIM DA ALTERAÇÃO
+// ==========================================================
+
 
     function showLogin() {
         appScreen.classList.add('hidden');
@@ -1700,6 +2150,50 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     }
+function renderTabelaVendas() {
+    const vendasFiltradas = getFilteredVendasTabela();
+    tabelaVendasBody.innerHTML = '';
+    const vendasOrdenadas = [...vendasFiltradas].sort((a, b) => new Date(b.data) - new Date(a.data));
+    
+    vendasOrdenadas.forEach(venda => {
+        // ==========================================================
+        //                    INÍCIO DA CORREÇÃO
+        // ==========================================================
+        
+        // 1. CORREÇÃO: A variável 'loja' é definida AQUI, dentro do loop.
+        // Para cada 'venda', procuramos a 'loja' correspondente no array de lojas.
+        const loja = lojas.find(l => l.id == venda.lojaId);
+        
+        // ==========================================================
+        //                     FIM DA CORREÇÃO
+        // ==========================================================
+
+        const totalVenda = venda.valor * venda.quantidade;
+
+        // Agora o código abaixo funcionará, pois a variável 'loja' existe e é a correta.
+        const row = `<tr>
+            <td>${new Date(venda.data + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
+            <td>${loja ? loja.nome : 'N/A'}</td>
+            <td>${venda.tipoLoja || (loja ? loja.tipo : 'N/A')}</td>
+            <td>${venda.modelo}</td>
+            <td>${venda.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+            <td>${venda.modeloVenda || 'N/A'}</td>
+            <td>${venda.formaPagamento || 'N/A'}</td>
+            <td>${venda.quantidade}</td>
+            <td>${totalVenda.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+            <td class="actions-cell">
+                <button class="btn-table-action btn-table-edit" data-id="${venda.id}">Editar</button>
+                <button class="btn-table-action btn-table-delete" data-id="${venda.id}">Excluir</button>
+            </td>
+        </tr>`;
+        
+        tabelaVendasBody.innerHTML += row;
+    });
+
+    document.querySelectorAll('#tabela-vendas .btn-table-edit').forEach(b => b.onclick = (e) => editVenda(e.target.dataset.id));
+    document.querySelectorAll('#tabela-vendas .btn-table-delete').forEach(b => b.onclick = (e) => deleteVenda(e.target.dataset.id));
+}
+
 
     // --- CONFIGURAÇÃO DOS FORMULÁRIOS ---
     function setupForms() {
@@ -1758,7 +2252,7 @@ document.addEventListener('DOMContentLoaded', () => {
         vendaDataInput.valueAsDate = new Date();
         vendaLojaSelect.onchange = () => {
             const loja = lojas.find(l => l.id == vendaLojaSelect.value);
-            vendaTipoLojaDisplay.value = loja ? `Bloco ${loja.tipo}` : '';
+            vendaTipoLojaDisplay.value = loja ? ` ${loja.tipo}` : '';
         };
         
         vendaModeloSelect.onchange = () => {
@@ -1769,7 +2263,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
         
-        const formasPagamento = ["Dinheiro", "Pix", "Crédito 1x", "Crédito 2x", "Crédito 3x", "Crédito 4x", "Crédito 5x", "Crédito 6x", "Crédito 7x", "Crédito 8x", "Crédito 9x", "Crédito 10x", "Crédito 11x", "Crédito 12x"];
+        const formasPagamento = ["Débito", "Pix", "Crédito 1x", "Crédito 2x", "Crédito 3x", "Crédito 4x", "Crédito 5x", "Crédito 6x", "Crédito 7x", "Crédito 8x", "Crédito 9x", "Crédito 10x", "Crédito 11x", "Crédito 12x", "Crédito 18x"];
         vendaFormaPagamentoSelect.innerHTML = formasPagamento.map(f => `<option value="${f}">${f}</option>`).join('');
 
         const calcularVendaTotal = () => {
@@ -1801,6 +2295,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 tipoLoja: lojaSelecionada ? lojaSelecionada.tipo : '',
                 modelo: vendaModeloSelect.value,
                 valor: parseFloat(vendaValorInput.value),
+                modeloVenda: document.getElementById('venda-modelo-venda').value,
                 formaPagamento: vendaFormaPagamentoSelect.value,
                 quantidade: parseInt(vendaQuantidadeInput.value)
             };
@@ -1812,14 +2307,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     // MODO CADASTRO: Adiciona um novo documento de venda no Firebase
                     await db.collection('vendas').add(vendaData);
+                
                 }
 
                 // Após salvar, recarrega todos os dados para atualizar os dashboards e tabelas
                 await loadDataFromFirebase();
+                resetVendaForm(); 
                 
-                resetVendaForm();
-                // Poderíamos adicionar uma mensagem de sucesso aqui se quiséssemos
-
             } catch (error) {
                 console.error("Erro ao salvar venda no Firebase:", error);
                 alert("Ocorreu um erro ao salvar a venda. Verifique o console para mais detalhes.");
@@ -1830,13 +2324,16 @@ document.addEventListener('DOMContentLoaded', () => {
         exportVendasBtn.addEventListener('click', () => {
             const vendasParaExportar = getFilteredVendasTabela().map(venda => {
                 const loja = lojas.find(l => l.id == venda.lojaId);
-                return {
-                    Data: venda.data,
-                    Loja: loja ? loja.nome : 'N/A',
-                    Modelo: venda.modelo,
-                    Valor: venda.valor,
-                    Quantidade: venda.quantidade,
-                    Total: (venda.valor * venda.quantidade).toFixed(2)
+                 return {
+                    "Data": venda.data,
+                    "Loja": loja ? loja.nome : 'N/A',
+                    "Tipo Loja": venda.tipoLoja || (loja ? loja.tipo : 'N/A'),
+                    "Modelo": venda.modelo,
+                    "Valor Unitario": venda.valor.toFixed(2),
+                    "Modelo Venda": venda.modeloVenda || '',
+                    "Forma Pagamento": venda.formaPagamento || '',
+                    "Quantidade": venda.quantidade,
+                    "Venda Total": (venda.valor * venda.quantidade).toFixed(2)
                 };
             });
             if (vendasParaExportar.length > 0) {
@@ -1851,6 +2348,58 @@ document.addEventListener('DOMContentLoaded', () => {
             vendasFilterLoja.value = '';
             renderTabelaVendas();
         };
+
+            showProdutoFormBtn.addEventListener('click', () => {
+            produtoForm.classList.remove('hidden');
+            showProdutoFormBtn.classList.add('hidden');
+            produtoForm.scrollIntoView({ behavior: 'smooth' });
+        });
+
+        // Evento para ESCONDER o formulário
+  cancelProdutoFormBtn.addEventListener('click', () => {
+            produtoForm.reset(); // Limpa os campos do formulário
+            produtoErrorMsg.classList.add('hidden'); // Esconde qualquer mensagem de erro
+            document.getElementById('produto-modelo').focus(); // Coloca o foco no primeiro campo
+        });
+
+        // Evento de SUBMISSÃO do formulário (lógica de salvar permanece a mesma)
+        produtoForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const nomeModelo = document.getElementById('produto-modelo').value.trim();
+            const valorModelo = parseFloat(document.getElementById('produto-valor').value);
+
+            const isDuplicate = produtos.some(p => p.modelo.toLowerCase() === nomeModelo.toLowerCase());
+            
+            if (isDuplicate) {
+                produtoErrorMsg.textContent = `O modelo "${nomeModelo}" já existe.`;
+                produtoErrorMsg.classList.remove('hidden');
+                return;
+            }
+
+            const novoProduto = {
+                modelo: nomeModelo,
+                valor: valorModelo,
+                ativo: true,
+                ultimaAlteracao: new Date().toISOString()
+            };
+
+            try {
+                await db.collection('produtos').add(novoProduto);
+
+                // Limpa o formulário para o próximo cadastro
+                cancelProdutoFormBtn.click(); // Simula um clique no botão de limpar
+                
+                await loadDataFromFirebase();
+                
+                alert('Produto cadastrado com sucesso!');
+
+            } catch (error) {
+                console.error("Erro ao cadastrar novo produto:", error);
+                produtoErrorMsg.textContent = 'Ocorreu um erro ao salvar. Tente novamente.';
+                produtoErrorMsg.classList.remove('hidden');
+            }
+        });
     }
 
     // --- FUNÇÕES DE RESET DE FORMULÁRIO ---
@@ -1865,17 +2414,30 @@ document.addEventListener('DOMContentLoaded', () => {
         lojaSuccessMsg.classList.add('hidden');
     }
 
-    function resetVendaForm() {
-        formLancamento.reset();
-        vendaEditId.value = '';
-        formLancamento.classList.remove('editing-mode');
-        vendaFormTitle.textContent = 'Lançar Nova Venda';
-        vendaSubmitBtn.textContent = 'Lançar Venda';
-        cancelEditVendaBtn.classList.add('hidden');
-        vendaDataInput.valueAsDate = new Date();
-        vendaTotalInput.value = '';
-        vendaTipoLojaDisplay.value = '';
-    }
+function resetVendaForm() {
+    // 1. Limpa todos os campos do formulário
+    formLancamento.reset();
+    
+    // 2. Reseta o ID de edição (para garantir que o próximo clique seja um "novo" lançamento)
+    vendaEditId.value = '';
+    
+    // 3. Remove a classe de "modo de edição"
+    formLancamento.classList.remove('editing-mode');
+    
+    // 4. Restaura os textos originais do título e do botão
+    vendaFormTitle.textContent = 'Lançar Nova Venda';
+    vendaSubmitBtn.textContent = 'Lançar Venda';
+    
+    // 5. Esconde o botão "Cancelar Edição"
+    cancelEditVendaBtn.classList.add('hidden');
+    
+    // 6. Redefine a data para o dia de hoje (MUITO IMPORTANTE para usabilidade)
+    vendaDataInput.valueAsDate = new Date();
+    
+    // 7. Limpa os campos que não são resetados automaticamente (readonly)
+    vendaTotalInput.value = '';
+    vendaTipoLojaDisplay.value = '';
+}
 
     // --- FUNÇÕES DE EDIÇÃO E EXCLUSÃO ---
     function editLoja(id) {
@@ -1919,12 +2481,39 @@ async function deleteLoja(id) {
         vendaValorInput.value = venda.valor;
         vendaFormaPagamentoSelect.value = venda.formaPagamento;
         vendaQuantidadeInput.value = venda.quantidade;
-        vendaValorInput.dispatchEvent(new Event('input'));
+        vendaValorInput.value = venda.valor;
+        document.getElementById('venda-modelo-venda').value = venda.modeloVenda || ''; // <<<<<<< NOVA LINHA
+        vendaFormaPagamentoSelect.value = venda.formaPagamento;
         vendaFormTitle.textContent = 'Editando Venda';
         vendaSubmitBtn.textContent = 'Salvar Alteração';
         cancelEditVendaBtn.classList.remove('hidden');
         formLancamento.scrollIntoView({ behavior: 'smooth' });
     }
+
+function populateLojasFilter() {
+    // 1. Pega a referência ao novo elemento <select>.
+    const detalheLojaFilter = document.getElementById('detalhe-loja-filter');
+
+    // Se o elemento não for encontrado, interrompe para evitar erros.
+    if (!detalheLojaFilter) return;
+
+    // 2. Limpa o select e adiciona a opção "Todas" como padrão.
+    detalheLojaFilter.innerHTML = '<option value="all">Todas</option>';
+    
+    // 3. Ordena as lojas em ordem alfabética.
+    const lojasOrdenadas = [...lojas].sort((a, b) => a.nome.localeCompare(b.nome));
+
+    // 4. Cria um <option> para cada loja.
+    lojasOrdenadas.forEach(loja => {
+        detalheLojaFilter.innerHTML += `<option value="${loja.id}">${loja.nome}</option>`;
+    });
+
+    // 5. Adiciona o "ouvinte" de eventos para atualizar a tabela quando a seleção mudar.
+    detalheLojaFilter.addEventListener('change', () => {
+        updateDetalheVendasTable(getFilteredVendas());
+    });
+}
+
 
 // ==================================================================
 // VERSÃO CORRIGIDA DA FUNÇÃO DE EXCLUIR VENDA (COM FIREBASE)
@@ -1950,6 +2539,27 @@ async function deleteVenda(id) {
         }
     }
 }
+// ==================================================================
+//           NOVA FUNÇÃO PARA EXCLUIR PRODUTO NO FIREBASE
+// ==================================================================
+async function deleteProduto(id) {
+    console.log(`Tentando excluir produto com ID: ${id}`);
+    try {
+        // 1. Envia o comando de exclusão para o Firebase
+        await db.collection('produtos').doc(id).delete();
+
+        // 2. Recarrega todos os dados para garantir que a interface seja atualizada
+        // Isso removerá o produto da tabela e dos seletores de venda.
+        await loadDataFromFirebase();
+
+        console.log(`Produto com ID ${id} excluído com sucesso.`);
+        alert('Produto excluído com sucesso!');
+
+    } catch (error) {
+        console.error("Erro ao excluir produto no Firebase:", error);
+        alert("Ocorreu um erro ao tentar excluir o produto. Verifique o console.");
+    }
+}
 
 
     // --- FUNÇÕES DE RENDERIZAÇÃO DE TABELA ---
@@ -1963,36 +2573,58 @@ async function deleteVenda(id) {
         });
     }
 
-    function renderTabelaVendas() {
-        const vendasFiltradas = getFilteredVendasTabela();
-        tabelaVendasBody.innerHTML = '';
-        const vendasOrdenadas = [...vendasFiltradas].sort((a, b) => new Date(b.data) - new Date(a.data));
+   function renderTabelaVendas() {
+    // Pega os filtros da tabela de vendas (se houver)
+    const vendasFiltradas = getFilteredVendasTabela();
+    
+    // Limpa o corpo da tabela
+    const tabelaVendasBody = document.getElementById('tabela-vendas-body');
+    tabelaVendasBody.innerHTML = '';
+
+    // Ordena as vendas da mais recente para a mais antiga
+    const vendasOrdenadas = [...vendasFiltradas].sort((a, b) => new Date(b.data) - new Date(a.data));
+    
+    // Itera sobre cada venda para criar a linha da tabela
+    vendasOrdenadas.forEach(venda => {
+        // Busca a loja correspondente
+        const loja = lojas.find(l => l.id == venda.lojaId);
+
+        // ==========================================================
+        //                    INÍCIO DA CORREÇÃO
+        // ==========================================================
         
-        vendasOrdenadas.forEach(venda => {
-            const loja = lojas.find(l => l.id == venda.lojaId);
-            const totalVenda = venda.valor * venda.quantidade;
-            const row = `<tr>
-                <td>${new Date(venda.data + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
-                <td>${loja ? loja.nome : 'N/A'}</td>
-                <td>${venda.modelo}</td>
-                <td>${venda.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-                <td>${venda.quantidade}</td>
-                <td>${totalVenda.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-                <td class="actions-cell">
-                    <button class="btn-table-action btn-table-edit" data-id="${venda.id}">Editar</button>
-                    <button class="btn-table-action btn-table-delete" data-id="${venda.id}">Excluir</button>
-                </td>
-            </tr>`;
-            tabelaVendasBody.innerHTML += row;
-        });
+        // 1. Validação de segurança para os valores numéricos
+        const valorUnitario = typeof venda.valor === 'number' ? venda.valor : 0;
+        const quantidade = typeof venda.quantidade === 'number' ? venda.quantidade : 0;
+        const totalVenda = valorUnitario * quantidade;
 
-        document.querySelectorAll('#tabela-vendas .btn-table-edit').forEach(b => b.onclick = (e) => editVenda(e.target.dataset.id));
-        document.querySelectorAll('#tabela-vendas .btn-table-delete').forEach(b => b.onclick = (e) => deleteVenda(e.target.dataset.id));
-    }
+        // ==========================================================
+        //                     FIM DA CORREÇÃO
+        // ==========================================================
 
-    /* ================================================================== */
-    /* BLOCO 2: CORREÇÃO NO JAVASCRIPT (Tabela de Lojas)                */
-    /* ================================================================== */
+        const row = `<tr>
+            <td>${new Date(venda.data + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
+            <td>${loja ? loja.nome : 'N/A'}</td>
+            <td>${venda.tipoLoja || (loja ? loja.tipo : 'N/A')}</td>
+            <td>${venda.modelo || 'N/A'}</td>
+            <td>${valorUnitario.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+            <td>${venda.modeloVenda || 'N/A'}</td>
+            <td>${venda.formaPagamento || 'N/A'}</td>
+            <td>${quantidade}</td>
+            <td>${totalVenda.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+            <td class="actions-cell">
+                <button class="btn-table-action btn-table-edit" data-id="${venda.id}">Editar</button>
+                <button class="btn-table-action btn-table-delete" data-id="${venda.id}">Excluir</button>
+            </td>
+        </tr>`;
+        
+        tabelaVendasBody.innerHTML += row;
+    });
+
+    // Adiciona os eventos de clique aos botões
+    document.querySelectorAll('#tabela-vendas .btn-table-edit').forEach(b => b.onclick = (e) => editVenda(e.target.dataset.id));
+    document.querySelectorAll('#tabela-vendas .btn-table-delete').forEach(b => b.onclick = (e) => deleteVenda(e.target.dataset.id));
+}
 
     function renderTabelaLojas() {
         // A lógica do subtítulo também precisa ser corrigida para contar "Shopping" e "Rua"
@@ -2029,11 +2661,21 @@ async function deleteVenda(id) {
     }
 
     function populateProdutosSelect() {
+        // ==========================================================
+        //               A LÓGICA CORRETA ESTÁ AQUI
+        // ==========================================================
+        
+        // 1. Filtra o array 'produtos', pegando APENAS os que têm 'p.ativo === true'.
         const produtosAtivos = produtos.filter(p => p.ativo);
+        
+        // 2. Limpa o select de modelos.
         vendaModeloSelect.innerHTML = '<option value="">Selecione o modelo</option>';
+
+        // 3. Popula o select usando APENAS a lista de produtos ativos.
         produtosAtivos.forEach(produto => {
             vendaModeloSelect.innerHTML += `<option value="${produto.modelo}">${produto.modelo}</option>`;
         });
+        // ==========================================================
     }
 
     function populateVendasFilters() {
@@ -2082,6 +2724,14 @@ function renderProdutosLista() {
             </td>
             <td>
                 <button class="edit-valor-btn" data-id="${produto.id}" title="Editar valor">✏️</button>
+                
+                <!-- NOVO BOTÃO DE EXCLUSÃO -->
+                <button class="delete-produto-btn" data-id="${produto.id}" title="Excluir produto" style="color: var(--danger-color); font-size: 1.5rem; margin-left: 15px;">
+                    &times;
+                </button>
+                <!-- ========================================================== -->
+                <!--                     FIM DA ALTERAÇÃO                       -->
+                <!-- ========================================================== -->
             </td>
             <td>${dataFormatada}</td>
             <td>
@@ -2191,6 +2841,23 @@ function renderProdutosLista() {
                     }
                 }
             }
+
+            if (target.closest('.delete-produto-btn')) {
+                const deleteBtn = target.closest('.delete-produto-btn');
+                const id = deleteBtn.dataset.id;
+                const produto = produtos.find(p => p.id == id);
+
+                if (produto) {
+                    // 1. Abre o modal de confirmação
+                    modalMessage.textContent = `Tem certeza que deseja excluir o modelo "${produto.modelo}"? Esta ação não pode ser desfeita.`;
+                    modal.classList.remove('hidden');
+
+                    // 2. Define o que acontece quando o usuário clica em "Confirmar"
+                    confirmCallback = () => {
+                        deleteProduto(id); // Chama a função que realmente deleta
+                    };
+                }
+            }
         });
 
     }
@@ -2225,6 +2892,8 @@ function renderProdutosLista() {
     }
 
     function updateDashboard() {
+        document.getElementById('venda-dia-chart').closest('.chart-wrapper').style.height = '350px';
+
         const vendasFiltradas = getFilteredVendas();
         const vendaTotal = vendasFiltradas.reduce((sum, v) => sum + (v.valor * v.quantidade), 0);
         const totalUnidades = vendasFiltradas.reduce((sum, v) => sum + v.quantidade, 0);
@@ -2314,8 +2983,8 @@ function updateRankingModeloChart(vendasFiltradas) {
     const sorted = Object.entries(vendasPorModelo).sort(([, a], [, b]) => b - a).slice(0, 10);
 
     const gradient = ctx.createLinearGradient(0,0, 0, ctx.canvas.height); // Gradiente horizontal
-    gradient.addColorStop(0, '#191013'); // Cor inicial (esquerda, mais clara)
-    gradient.addColorStop(1, '#15191d'); // Cor final (direita, mais escura)
+    gradient.addColorStop(0, '#1a0b2a'); // Cor inicial (esquerda, mais clara)
+    gradient.addColorStop(1, '#1a0b2a'); // Cor final (direita, mais escura)
 
     createChart(ctx, 'bar', {
         labels: sorted.map(([nome]) => nome),
@@ -2346,10 +3015,24 @@ function updateRankingLojasChart(vendasFiltradas) {
         return acc;
     }, {});
     const sortedLojas = Object.entries(vendasPorLoja).sort(([, a], [, b]) => b - a);
+    // ==========================================================
+    //                 INÍCIO DA ALTERAÇÃO (LÓGICA DE ALTURA)
+    // ==========================================================
+    const numeroDeLojas = sortedLojas.length;
+    const alturaPorBarra = 25; // Altura em pixels para cada barra
+    
+    // Calcula a altura total que o canvas precisa ter
+    const alturaTotalCanvas = numeroDeLojas * alturaPorBarra;
+    
+    // Define a ALTURA MÍNIMA do canvas. Se for maior que o wrapper, o scroll aparece.
+    ctx.canvas.style.minHeight = `${alturaTotalCanvas}px`;
+    // ==========================================================
+    //                  FIM DA ALTERAÇÃO
+    // ==========================================================
 
     const gradient = ctx.createLinearGradient(0,0, 0, ctx.canvas.height); // Gradiente horizontal
-    gradient.addColorStop(1, '#f7a21b'); // Cor inicial (esquerda, mais clara)
-    gradient.addColorStop(0, '#faba32'); // Cor final (direita, mais escura)
+    gradient.addColorStop(1, '#f5d393'); // Cor inicial (esquerda, mais clara)
+    gradient.addColorStop(0, '#f5d393'); // Cor final (direita, mais escura)
 
     createChart(ctx, 'bar', {
         labels: sortedLojas.map(([nome]) => nome),
@@ -2358,13 +3041,14 @@ function updateRankingLojasChart(vendasFiltradas) {
             data: sortedLojas.map(([, qtd]) => qtd),
             backgroundColor: gradient,
             borderRadius: 18
+
         }]
     }, { 
         indexAxis: 'y', 
         plugins: { 
             legend: { display: false },
             datalabels: {
-                color: '#fff',
+                color: '#15191',
                 anchor: 'center',
                 align: 'center'
             }
@@ -2378,7 +3062,6 @@ function updateRankingLojasChart(vendasFiltradas) {
 
 function updateParticipacaoChart(vendasFiltradas) {
     const ctx = document.getElementById('participacao-lojas-chart').getContext('2d');
-    
     // 1. Calcula a venda total em VALOR (R$), que será o nosso 100%.
     const vendaTotalValor = vendasFiltradas.reduce((sum, v) => sum + (v.valor * v.quantidade), 0);
 
@@ -2392,11 +3075,23 @@ function updateParticipacaoChart(vendasFiltradas) {
     }, {});
 
     const sorted = Object.entries(vendasPorLoja).sort(([, a], [, b]) => b - a);
+    // ==========================================================
+    //                 INÍCIO DA ALTERAÇÃO (LÓGICA DE ALTURA)
+    // ==========================================================
+    const numeroDeLojas = sorted.length;
+    const alturaPorBarra = 25; // Altura em pixels para cada barra
     
+    const alturaTotalCanvas = numeroDeLojas * alturaPorBarra;
+    
+    ctx.canvas.style.minHeight = `${alturaTotalCanvas}px`;
+    // ==========================================================
+    //                  FIM DA ALTERAÇÃO
+    // ==========================================================
+
     const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
     const isDarkMode = document.body.classList.contains('dark-mode');
-        gradient.addColorStop(1, '#4b538b'); // Cor inicial (esquerda, mais clara)
-        gradient.addColorStop(0, '#4b538b'); // Cor final (direita, mais escura)
+        gradient.addColorStop(1, '#f39772'); // Cor inicial (esquerda, mais clara)
+        gradient.addColorStop(0, '#f39772'); // Cor final (direita, mais escura)
     createChart(ctx, 'bar', {
         labels: sorted.map(([nome]) => nome),
         datasets: [{
@@ -2412,7 +3107,7 @@ function updateParticipacaoChart(vendasFiltradas) {
             legend: { display: false },
             // 4. ALTERAÇÃO: Rótulo de dados agora formata como percentual.
             datalabels: {
-                color: '#fff',
+                color: '#15191',
                 anchor: 'center',
                 align: 'center',
                 formatter: (value) => value > 0 ? `${value.toFixed(1)}%` : '' // Ex: 25.5%
@@ -2447,24 +3142,27 @@ function updateParticipacaoChart(vendasFiltradas) {
 
 
 function updateDetalheVendasTable(vendasFiltradas) {
-
     
     const meses = ["JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO", "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO"];
     const diasSemana = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
     const selectedMonth = parseInt(filterMonth.value);
     const selectedYear = parseInt(filterYear.value);
-
     const mesNome = selectedMonth !== 'all' ? meses[selectedMonth] : 'PERÍODO';
     detalheVendasTitulo.textContent = `Detalhamento de Vendas - ${mesNome}`;
 
+    const detalheLojaFilter = document.getElementById('detalhe-loja-filter');
+    // Adiciona uma verificação de segurança para o caso do elemento não existir ainda
+    if (!detalheLojaFilter) return; 
+    
+    const lojaFiltradaId = detalheLojaFilter.value;
+    let lojasAtivas;
 
-
-   const lojasAtivas = [...lojas].sort((a,b) => a.nome.localeCompare(b.nome));
-
-
-    // --- INÍCIO DA ALTERAÇÃO: CÁLCULO E RENDERIZAÇÃO DO TOTALIZADOR ---
-
-    // 1. CALCULAR TOTAIS POR LOJA E O TOTAL GERAL
+    if (lojaFiltradaId === 'all') {
+        lojasAtivas = [...lojas].sort((a, b) => a.nome.localeCompare(b.nome));
+    } else {
+        lojasAtivas = lojas.filter(loja => loja.id === lojaFiltradaId);
+    }
+    
     const totaisPorLoja = {};
     let totalGeralPcs = 0;
     let totalGeralValor = 0;
@@ -2478,8 +3176,11 @@ function updateDetalheVendasTable(vendasFiltradas) {
         totalGeralValor += totalValor;
     });
 
-    // 2. AJUSTAR A CONSTRUÇÃO DO CABEÇALHO PARA INCLUIR A NOVA LINHA
-    // A primeira célula do cabeçalho agora ocupa 4 linhas (rowspan="4")
+    // ==========================================================
+    //            INÍCIO DO CÓDIGO RESTAURADO
+    // ==========================================================
+
+    // --- CONSTRUÇÃO DO CABEÇALHO DA TABELA ---
     let headerHTML = '<tr><th rowspan="4" class="row-header-dia">DATA</th>';
     
     if (lojasAtivas.length > 0) {
@@ -2492,17 +3193,14 @@ function updateDetalheVendasTable(vendasFiltradas) {
         });
         headerHTML += '<th colspan="2"></th></tr>';
         
-        // **NOVA LINHA DE TOTALIZADORES**
         headerHTML += '<tr>';
         lojasAtivas.forEach(loja => {
             const total = totaisPorLoja[loja.id];
             headerHTML += `<th class="sub-header">${total.pcs}</th><th class="sub-header">${total.valor.toLocaleString('pt-BR')}</th>`;
         });
-        // Adiciona o total geral
         headerHTML += `<th class="sub-header">${totalGeralPcs}</th><th class="sub-header">${totalGeralValor.toLocaleString('pt-BR')}</th>`;
         headerHTML += '</tr>';
         
-        // Linha de "Pçs" e "$"
         headerHTML += '<tr>';
         lojasAtivas.forEach(() => { headerHTML += '<th class="sub-header">Pçs</th><th class="sub-header">$</th>'; });
         headerHTML += '<th class="sub-header">Pçs</th><th class="sub-header">$</th>';
@@ -2510,9 +3208,7 @@ function updateDetalheVendasTable(vendasFiltradas) {
     headerHTML += '</tr>';
     detalheVendasHead.innerHTML = headerHTML;
     
-    // --- FIM DA ALTERAÇÃO ---
-
-    // O corpo da tabela permanece o mesmo
+    // --- CONSTRUÇÃO DO CORPO DA TABELA ---
     const diasDoMes = (selectedMonth === 'all' || selectedYear === 'all') 
         ? [...new Set(vendasFiltradas.map(v => v.data))].sort()
         : Array.from({ length: new Date(selectedYear, selectedMonth + 1, 0).getDate() }, (_, i) => `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}-${String(i + 1).padStart(2, '0')}`);
@@ -2544,27 +3240,27 @@ function updateDetalheVendasTable(vendasFiltradas) {
         });
     }
     detalheVendasBody.innerHTML = bodyHTML;
+
+    // ==========================================================
+    //                 FIM DO CÓDIGO RESTAURADO
+    // ==========================================================
 }
 
-
-/* ================================================================== */
-/* BLOCO ÚNICO: CORREÇÃO NO JAVASCRIPT (Ordem de Definição de ctx)    */
-/* ================================================================== */
-
 function updateVendaTipoLojaChart(vendasFiltradas) {
-    // 1. CORREÇÃO: A linha que define 'ctx' foi movida para o início.
     const ctx = document.getElementById('venda-tipo-loja-chart').getContext('2d');
     const totalUnidades = vendasFiltradas.reduce((sum, v) => sum + v.quantidade, 0);
-    if (totalUnidades === 0) { if(charts[ctx.canvas.id]) charts[ctx.canvas.id].destroy(); return; }
+    if (totalUnidades === 0) {
+        if (charts[ctx.canvas.id]) charts[ctx.canvas.id].destroy();
+        return;
+    }
 
     const vendasPorTipo = vendasFiltradas.reduce((acc, v) => {
         const loja = lojas.find(l => l.id == v.lojaId);
-        if (loja) acc[`Bloco ${loja.tipo}`] = (acc[`Bloco ${loja.tipo}`] || 0) + v.quantidade;
+        if (loja) acc[loja.tipo] = (acc[loja.tipo] || 0) + v.quantidade;
         return acc;
     }, {});
     const sorted = Object.entries(vendasPorTipo).sort(([, a], [, b]) => b - a);
     
-    // 2. CORREÇÃO: Agora 'ctx' já existe quando estas linhas são executadas.
     const chartArea = ctx.canvas.getBoundingClientRect();
     const centerX = chartArea.width / 2;
     const centerY = chartArea.height / 2;
@@ -2577,41 +3273,70 @@ function updateVendaTipoLojaChart(vendasFiltradas) {
         return gradient;
     };
 
-    const gradientBlue = createRadialGradient('#4b538b', '#4b538b');
-    const gradientGreen = createRadialGradient('#a5c8ca', '#a5c8ca');
-    const gradientYellow = createRadialGradient('#ffab00', '#FFC400');
+    const gradientBlue = createRadialGradient('#f5d393', '#f5d393');
+    const gradientLightBlue = createRadialGradient('#f39772', '#f39772');
+    const gradientYellow = createRadialGradient('#eb6765', '#eb6765');
+    const gradientGreen = createRadialGradient('#261329', '#261329');
 
-    createChart(ctx, 'pie', {
+    createChart(ctx, 'doughnut', {
         labels: sorted.map(([tipo]) => tipo),
         datasets: [{
             data: sorted.map(([, qtd]) => qtd),
-            backgroundColor: [gradientBlue, gradientGreen, gradientYellow],
-            borderColor: document.body.classList.contains('dark-mode') ? '#111111' : '#ffffff',
-            borderWidth: 0
+            backgroundColor: [
+                gradientBlue, 
+                gradientLightBlue, 
+                gradientYellow, 
+                gradientGreen
+            ],
+            borderColor: document.body.classList.contains('dark-mode') ? '#111111' : '#ffffff', // Corrigido para fundo branco no modo claro
+            borderWidth: 0 // Adicionado uma pequena borda para melhor separação
         }]
     }, {
+        // ==========================================================
+        //            INÍCIO DO BLOCO DE CÓDIGO ADICIONADO
+        // ==========================================================
         plugins: {
-            legend: { position: 'bottom' },
-                        datalabels: {
-                color: '#fff',
-                anchor: 'center', // Ancorar o rótulo no centro da fatia
-                align: 'center',  // Alinhar o texto no centro da âncora
-                formatter: (value) => {
-                    const percent = (value / totalUnidades * 100).toFixed(1);
-                    return `${percent}%`; // Mostra apenas o percentual
+            // 1. Configura a legenda para aparecer na parte de baixo
+            legend: { 
+                position: 'bottom' 
+            },
+            
+            // 2. Configura os rótulos de dados
+            datalabels: {
+                // Cor da fonte do rótulo (branca para bom contraste)
+                color: '#15191d',
+                
+                // Posição do rótulo: ancorado no centro da fatia
+                anchor: 'center',
+                
+                // Alinhamento do texto: centralizado na âncora
+                align: 'center',
+                
+                // Função para formatar o valor como percentual
+                formatter: (value, context) => {
+                    const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                    const percentage = (value / total * 100).toFixed(1);
+                    // Só mostra o rótulo se for maior que 3% para não poluir o gráfico
+                    return percentage > 3 ? `${percentage}%` : ''; 
                 },
+                
+                // Estilo da fonte
                 font: { 
                     weight: 'bold',
-                    size: 11 // Aumenta um pouco o tamanho da fonte para melhor leitura
+                    size: 12
                 }
             }
-            // ==================================================================
-            // FIM DA ALTERAÇÃO
-            // ==================================================================
         },
-        cutout: '50%' 
+        // ==========================================================
+        //                 FIM DO BLOCO ADICIONADO
+        // ==========================================================
+        
+        // Mantém a sua configuração de "furo" da rosca
+        cutout: '60%' 
     });
 }
+
+
 
 
 function updateVendaFormaPagamentoChart(vendasFiltradas) {
@@ -2624,8 +3349,8 @@ function updateVendaFormaPagamentoChart(vendasFiltradas) {
     
     const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
     const isDarkMode = document.body.classList.contains('dark-mode');
-        gradient.addColorStop(1, '#f7a21b'); // Cor inicial (esquerda, mais clara)
-        gradient.addColorStop(0, '#f7a21b'); // Cor final (direita, mais escura)
+        gradient.addColorStop(1, '#f5d393'); // Cor inicial (esquerda, mais clara)
+        gradient.addColorStop(0, '#f5d393'); // Cor final (direita, mais escura)
 
     createChart(ctx, 'bar', {
         labels: sorted.map(([nome]) => nome),
@@ -2640,7 +3365,7 @@ function updateVendaFormaPagamentoChart(vendasFiltradas) {
         plugins: { 
             legend: { display: false },
             datalabels: {
-                color: '#fff',
+                color: '#15191',
                 anchor: 'center',
                 align: 'center'
             }
@@ -2658,8 +3383,8 @@ function updateRankingGRCChart(vendasFiltradas) {
     const sorted = Object.entries(vendasPorGRC).sort(([, a], [, b]) => b - a);
 
     const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
-        gradient.addColorStop(1, '#15191d'); // Cor inicial (esquerda, mais clara)
-        gradient.addColorStop(0, '#15191d'); // Cor final (direita, mais escura)
+        gradient.addColorStop(1, '#1a0b2a'); // Cor inicial (esquerda, mais clara)
+        gradient.addColorStop(0, '#1a0b2a'); // Cor final (direita, mais escura)
 
     createChart(ctx, 'bar', {
         labels: sorted.map(([grc]) => grc),
@@ -2689,32 +3414,84 @@ function updateVendaDiaChart(vendasFiltradas) {
         return acc;
     }, {});
     const sorted = Object.entries(vendasPorDia).sort(([a], [b]) => new Date(a) - new Date(b));
-
+    
+    // As variáveis isMobile e isDarkMode não são mais necessárias para o formatter aqui.
+    const isMobile = window.innerWidth <= 768;
     const isDarkMode = document.body.classList.contains('dark-mode');
+    
+    const maxDataValue = Math.max(...sorted.map(([, val]) => val));
 
-    // O gradiente não é mais necessário para a cor de fundo principal
-    // const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
-    // ...
+    // ==========================================================
+    //            INÍCIO DA LÓGICA DE FORMATAÇÃO
+    // ==========================================================
+
+    // 1. Função de formatação com o padrão "Mil" e "Mi"
+    const formatarValorAbreviado = (valor) => {
+        if (valor >= 1000000) {
+            // Formata para Milhões (Mi) com uma casa decimal e vírgula
+            return (valor / 1000000).toFixed(1).replace('.', ',') + ' Mi';
+        }
+        if (valor >= 1000) {
+            // Formata para Milhares (Mil) com uma casa decimal e vírgula
+            return (valor / 1000).toFixed(1).replace('.', ',') + ' Mil';
+        }
+        // Abaixo de 1000, mostra o número inteiro
+        return valor.toFixed(0);
+    };
+
+    // 2. A configuração dos rótulos agora é ÚNICA, usando sempre a abreviação.
+    const datalabelsConfig = {
+        display: true,
+        anchor: 'end',
+        align: 'top',
+        offset: 8,
+        color: isDarkMode ? '#e0e0e0' : '#15191d',
+        font: { size: 10, weight: 'bold' },
+        backgroundColor: isDarkMode ? 'rgba(40, 40, 40, 0.7)' : 'rgba(255, 255, 255, 0.7)',
+        borderRadius: 4,
+        padding: 4,
+        // A mágica acontece aqui:
+        formatter: (value) => value > 0 ? formatarValorAbreviado(value) : ''
+    };
+
+    // ==========================================================
+    //                 FIM DA LÓGICA DE FORMATAÇÃO
+    // ==========================================================
 
     const options = {
-        responsive: true, // Garante que o gráfico se ajuste ao contêiner
-        maintainAspectRatio: false, // Permite que o gráfico preencha a altura do contêiner
-        plugins: {
-            legend: { display: false },
-            datalabels: {
-                display: !isMobile, // ESCONDE os rótulos de dados no mobile para não poluir
-                // ... (o resto das suas configurações de datalabels)
+        maintainAspectRatio: false,
+        // ==========================================================
+        //           INÍCIO DA CORREÇÃO (PADDING LATERAL)
+        // ==========================================================
+        layout: {
+            padding: {
+                top: 30,    // Mantém um respiro no topo
+                left: 15,   // Adiciona espaço na esquerda para o primeiro rótulo
+                right: 25   // Adiciona espaço na direita para o último rótulo
             }
         },
+        // ==========================================================
+        //            FIM DA CORREÇÃO (PADDING LATERAL)
+        // ==========================================================
+        plugins: {
+            legend: { display: false },
+            datalabels: datalabelsConfig 
+        },
         scales: {
-            y: { /* ... (suas configurações de eixo Y) ... */ },
-            x: {
+            y: { 
+                grid: { display: true, drawBorder: false }, 
+                ticks: { display: true },
+                suggestedMax: maxDataValue * 1.1 
+            },
+            x: { 
                 grid: { display: false },
                 ticks: {
-                    autoSkip: true, // **ESSA É A CHAVE**: Permite que o Chart.js pule rótulos para evitar sobreposição
-                    maxTicksLimit: isMobile ? 5 : 15, // Mostra no máximo 5 datas no mobile
-                    maxRotation: 0, // Garante que os rótulos fiquem retos
-                    minRotation: 0
+                    maxRotation: 0,
+                    minRotation: 0,
+                    maxTicksLimit: isMobile ? 7 : 31,
+                    font: { size: 10 },
+                    autoSkip: true,
+                    padding: 5
                 }
             }
         }
@@ -2725,18 +3502,15 @@ function updateVendaDiaChart(vendasFiltradas) {
         datasets: [{
             label: 'Venda Total',
             data: sorted.map(([, val]) => val),
-            
-            // --- ALTERAÇÃO: Cores padronizadas para o azul ---
-            borderColor: '#4b538b',             // Cor da LINHA
-            backgroundColor: 'rgba(75, 83, 139, 0.5)', // Cor da ÁREA com 50% de transparência
-            pointBackgroundColor: '#4b538b',   // Cor do MARCADOR (ponto)
-
+            borderColor: '#1a0b2a',
+            backgroundColor: 'rgba(26, 11, 42, 0.5)',
+            pointBackgroundColor: '#1a0b2a',
             pointBorderColor: '#fff',
             pointHoverBackgroundColor: '#fff',
-            pointHoverBorderColor: '#4b538b',
+            pointHoverBorderColor: '#1a0b2a',
             pointRadius: 4,
             pointHoverRadius: 6,
-            fill: true, // 'fill: true' usa o backgroundColor para preencher a área
+            fill: true,
             tension: 0.4
         }]
     };
@@ -2745,7 +3519,10 @@ function updateVendaDiaChart(vendasFiltradas) {
 }
 
 
+
+
 function updateVendaSemanaChart(vendasFiltradas) {
+
     const ctx = document.getElementById('venda-semana-chart').getContext('2d');
     
     const getWeekOfMonth = (date) => {
@@ -2776,33 +3553,73 @@ function updateVendaSemanaChart(vendasFiltradas) {
     });
 
     const isDarkMode = document.body.classList.contains('dark-mode');
-
+    const maxDataValue = Math.max(...sorted.map(item => item.value));
     // O gradiente não é mais necessário
     // const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
     // ...
 
-  createChart(ctx, 'line', {
-        labels: sorted.map(item => item.label),
-        datasets: [{ /* ... (suas configurações de dataset) ... */ }]
+    createChart(ctx, 'line', {
+        labels: sorted.map(item => item.label.split(' ')[0] + ' Sem'),
+        datasets: [{
+            label: 'Venda Total',
+            data: sorted.map(item => item.value),
+
+            // --- ALTERAÇÃO: Cores padronizadas para o azul ---
+            borderColor: '#1a0b2a',             // Cor da LINHA
+            pointBackgroundColor: '#1a0b2a',
+            pointHoverBorderColor: '#1a0b2a',
+            backgroundColor: 'rgba(26, 11, 42, 0.5)',
+            fill: true,
+            tension: 0.4,
+            pointBorderColor: '#fff',
+            pointHoverBackgroundColor: '#fff',
+            pointHoverBorderColor: '#4b538b',
+            pointRadius: 4,
+            pointHoverRadius: 6
+        }]
     }, {
-        responsive: true,
-        maintainAspectRatio: false,
+     maintainAspectRatio: false,
+             layout: {
+            padding: {
+                top: 30
+            }
+        },
         plugins: {
             legend: { display: false },
             datalabels: {
-                display: !isMobile, // ESCONDE os rótulos de dados no mobile
-                // ... (o resto das suas configurações de datalabels)
+                display: true,
+                anchor: 'end',
+                align: 'top',
+                offset: 8,
+                color: isDarkMode ? '#e0e0e0' : '#15191d',
+                font: {
+                    size: 10,
+                    weight: 'bold'
+                },
+                formatter: (value) => value > 0 ? value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '',
+                backgroundColor: isDarkMode ? 'rgba(40, 40, 40, 0.7)' : 'rgba(255, 255, 255, 0.7)',
+                borderRadius: 4,
+                padding: 4
             }
         },
-        scales: {
-            y: { /* ... (suas configurações de eixo Y) ... */ },
-            x: {
+       scales: {
+            y: { grid: { display: true, drawBorder: false }, ticks: { display: true } },
+            x: { 
                 grid: { display: false },
                 ticks: {
-                    autoSkip: true, // Permite pular rótulos
-                    maxTicksLimit: isMobile ? 4 : 10, // Mostra no máximo 4 semanas no mobile
+                    // 1. Deixa os rótulos retos
                     maxRotation: 0,
-                    minRotation: 0
+                    minRotation: 0,
+
+                    // 2. Aumenta a quantidade de rótulos (geralmente 4 ou 5 semanas no máximo)
+                    maxTicksLimit: 5,
+                    
+                    // 3. Diminui o tamanho da fonte
+                    font: {
+                        size: 10
+                    },
+                    autoSkip: true,
+                    padding: 5
                 }
             }
         }
@@ -2811,26 +3628,41 @@ function updateVendaSemanaChart(vendasFiltradas) {
 
 function updateVendaMensalChart() {
     const ctx = document.getElementById('venda-mensal-chart').getContext('2d');
-    
     const vendasPorMes = vendas.reduce((acc, v) => {
         const vendaDate = new Date(v.data + 'T00:00:00');
         const chave = `${vendaDate.getFullYear()}-${String(vendaDate.getMonth()).padStart(2, '0')}`;
         acc[chave] = (acc[chave] || 0) + (v.valor * v.quantidade);
         return acc;
     }, {});
-
     const sorted = Object.entries(vendasPorMes).sort(([a], [b]) => a.localeCompare(b));
-
     const labels = sorted.map(([chave]) => {
         const [ano, mes] = chave.split('-');
         return new Date(ano, mes, 1).toLocaleString('pt-BR', { month: 'short', year: '2-digit' }).replace('. de', '');
     });
     const data = sorted.map(([, valor]) => valor);
-
     const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
-    gradient.addColorStop(1, '#f7a21b ');
-    gradient.addColorStop(0, '#f7a21b ');
-
+    gradient.addColorStop(1, '#f5d393');
+    gradient.addColorStop(0, '#f5d393');
+    const isMobile = window.innerWidth <= 768;
+    const datalabelsConfig = isMobile 
+        ? {
+            anchor: 'center',
+            align: 'center',
+            rotation: -90,
+            offset: 0,
+            color: '#15191',
+            font: { weight: 'bold', size: 11 },
+            // AQUI ESTÁ A CORREÇÃO:
+            formatter: (value) => value > 0 ? value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ''
+          }
+        : { 
+            color: document.body.classList.contains('dark-mode') ? '#15191' : '#15191',
+            anchor: 'center',
+            align: 'center',
+            offset: 4,
+            font: { weight: 'bold', size: 11 },
+            formatter: (value) => value > 0 ? value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : ''
+          };
     createChart(ctx, 'bar', {
         labels: labels,
         datasets: [{
@@ -2842,31 +3674,13 @@ function updateVendaMensalChart() {
     }, {
         plugins: {
             legend: { display: false },
-            // --- ALTERAÇÃO PARA DEIXAR OS RÓTULOS APARENTES ---
-            datalabels: {
-                // Define a cor do texto dinamicamente (preto no modo claro, branco no modo escuro)
-                color: document.body.classList.contains('dark-mode') ? '#e8f5e9' : '#e8f5e9',
-                anchor: 'center',     // "Âncora" do rótulo no final da barra (no topo)
-                align: 'center',      // Alinha o rótulo ACIMA da âncora (para fora da barra)
-                offset: 4,         // Adiciona um pequeno espaço de 4 pixels acima da barra
-                font: {
-                    weight: 'bold',
-                    size: 11
-                },
-                // Formata o valor para '12.3k' (milhares)
-                formatter: (value) => {
-                    if (value > 0) {
-                        return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-                    }
-                    return '';
-                }
-            }
+            datalabels: datalabelsConfig
         }
     });
 }
 
 
-  function updateVendaAnualChart() {
+function updateVendaAnualChart() {
     const ctx = document.getElementById('venda-anual-chart').getContext('2d');
 
     const vendasPorAno = vendas.reduce((acc, v) => {
@@ -2878,8 +3692,35 @@ function updateVendaMensalChart() {
     const sorted = Object.entries(vendasPorAno).sort(([a], [b]) => a.localeCompare(b));
 
     const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
-    gradient.addColorStop(1, '#15191d');
-    gradient.addColorStop(0, '#15191d');
+    gradient.addColorStop(1, '#f39772');
+    gradient.addColorStop(0, '#f39772');
+
+    // ==========================================================
+    //           INÍCIO DA LÓGICA CONDICIONAL PARA RÓTULOS
+    // ==========================================================
+
+    // 1. Verifica se é mobile
+    const isMobile = window.innerWidth <= 768;
+
+    // 2. Define as configurações condicionalmente
+    const datalabelsConfig = isMobile? { // --- CONFIGURAÇÃO PARA MOBILE ---
+            anchor: 'center',
+            align: 'center',
+            rotation: -90,
+            offset: 8,
+            color: '#15191',
+            font: { weight: 'bold', size: 11 },
+            // AQUI ESTÁ A CORREÇÃO:
+            formatter: (value) => value > 0 ? value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ''
+          }
+        : { 
+            color: document.body.classList.contains('dark-mode') ? '#15191' : '#15191',
+            anchor: 'center',
+            align: 'center',
+            offset: 4,
+            font: { weight: 'bold', size: 11 },
+            formatter: (value) => value > 0 ? value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : ''
+          };
 
     createChart(ctx, 'bar', {
         labels: sorted.map(([ano]) => ano),
@@ -2892,41 +3733,26 @@ function updateVendaMensalChart() {
     }, {
         plugins: {
             legend: { display: false },
-            // --- ALTERAÇÃO PARA DEIXAR OS RÓTULOS APARENTES ---
-            datalabels: {
-                // Define a cor do texto dinamicamente
-                color: document.body.classList.contains('dark-mode') ? '#e8f5e9' : '#e8f5e9',
-                anchor: 'center',     // Âncora no topo da barra
-                align: 'center',      // Alinha para fora da barra
-                offset: 4,         // Espaçamento acima da barra
-                font: {
-                    weight: 'bold',
-                    size: 11
-                },
-                // Formata o valor para '12.3k' (milhares)
-                formatter: (value) => {
-                    if (value > 0) {
-                        return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-                    }
-                    return '';
-                }
-            }
+            // 3. Aplica a configuração
+            datalabels: datalabelsConfig
         }
     });
 }
 
-    // --- FUNÇÃO DE RENDERIZAÇÃO INICIAL ---
     function renderAll() {
         renderTabelaLojas();
         renderProdutosLista();
         populateLojasSelect();
         populateProdutosSelect();
         populateVendasFilters();
+
+                populateLojasFilter(); // Gera os checkboxes
+        lojasSelecionadasIds = lojas.map(l => l.id);
         renderTabelaVendas();
         updateDashboard();
     }
 
-    // --- PONTO DE ENTRADA DA APLICAÇÃO ---
+
     checkLogin();
 });
 
