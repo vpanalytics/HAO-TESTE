@@ -459,6 +459,7 @@
     font-weight: 600;
     position: sticky;
     top: 0;
+    z-index: 1; 
 }
 
     tbody tr:hover {
@@ -1162,6 +1163,50 @@ tr:hover .btn-edit-comissao {
 }
 
 /* ========================================================== */
+/*       INÍCIO DA AÇÃO: CORRIGIR QUEBRA DE LINHA NA TABELA     */
+/* ========================================================== */
+
+#tabela-analise-comissao td,
+#tabela-analise-comissao th {
+    white-space: nowrap; /* Impede que o texto quebre para a próxima linha */
+    overflow: hidden;      /* Esconde o texto que transborda da célula */
+    text-overflow: ellipsis; /* Adiciona "..." ao final do texto cortado */
+}
+
+/* Opcional: Aumentar um pouco a largura da coluna "Loja" para dar mais espaço */
+#tabela-analise-comissao th:nth-child(2),
+#tabela-analise-comissao td:nth-child(2) {
+    min-width: 200px; /* Ajuste este valor conforme necessário */
+}
+
+
+/* ========================================================== */
+/*                        FIM DA AÇÃO                         */
+/* ========================================================== */
+/* ========================================================== */
+/*       INÍCIO DA AÇÃO: CORRIGIR QUEBRA DE LINHA NA TABELA DE LOJAS     */
+/* ========================================================== */
+
+#tabela-lojas td,
+#tabela-lojas th {
+    white-space: nowrap; /* Impede que o texto quebre para a próxima linha */
+    overflow: hidden;      /* Esconde o texto que transborda da célula */
+    text-overflow: ellipsis; /* Adiciona "..." ao final do texto cortado */
+}
+
+/* Opcional, mas recomendado: Definir uma largura para a coluna "Loja" */
+#tabela-lojas th:nth-child(1),
+#tabela-lojas td:nth-child(1) {
+    min-width: 220px; /* Dê um bom espaço para a coluna principal */
+    width: 40%;       /* Tenta ocupar 40% do espaço disponível */
+}
+
+/* ========================================================== */
+/*                        FIM DA AÇÃO                         */
+/* ========================================================== */
+
+
+/* ========================================================== */
 /*     CONTROLE DE VISIBILIDADE (DESKTOP vs MOBILE)           */
 /* ========================================================== */
 
@@ -1529,6 +1574,12 @@ tr:hover .btn-edit-comissao {
                         <select id="filter-month"></select>
                         <label for="filter-year">Ano:</label>
                         <select id="filter-year"></select>
+                        <!-- NOVO FILTRO DE LOJA -->
+                        <label for="filter-loja">Loja:</label>
+                        <select id="filter-loja">
+                            <!-- Opções serão populadas pelo JavaScript -->
+                        </select>
+                        <!-- FIM DO NOVO FILTRO -->
                     </div>
                             <button id="refresh-dashboard-btn" title="Recarregar Dados">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -2330,6 +2381,33 @@ function populateGRCSugestoes() {
 //                        FIM DA AÇÃO 2
 // ==========================================================
 
+
+// ==========================================================
+//       INÍCIO DA AÇÃO 2: POPULAR O FILTRO DE LOJA
+// ==========================================================
+
+
+function populateDashboardLojaFilter() {
+    const filterLoja = document.getElementById('filter-loja');
+    if (!filterLoja) return;
+
+    // 1. Limpa opções antigas e adiciona a opção "Todas"
+    filterLoja.innerHTML = '<option value="all">Todas as Lojas</option>';
+
+    // 2. Ordena as lojas por nome e adiciona cada uma como uma opção
+    lojas.sort((a, b) => a.nome.localeCompare(b.nome)).forEach(loja => {
+        filterLoja.innerHTML += `<option value="${loja.id}">${loja.nome}</option>`;
+    });
+
+    // 3. REMOVEMOS O 'onchange' DAQUI.
+    // A configuração do evento será feita em um lugar mais seguro (na função initializeApp).
+}
+
+// ==========================================================
+//                        FIM DA AÇÃO
+// ==========================================================
+
+
     function applyTheme(theme  ) {
         if (theme === 'dark') {
             document.body.classList.add('dark-mode');
@@ -2490,7 +2568,10 @@ logoutButton.addEventListener('click', () => {
         setupProdutosInteractivity();
         populateFilters();
         populateComissaoFilters();
-
+  const filterLojaDashboard = document.getElementById('filter-loja');
+    if (filterLojaDashboard) {
+        filterLojaDashboard.onchange = runDashboardUpdate;
+    }
         // ADICIONE ESTE BLOCO DE CÓDIGO
         toggleDiaBtn.addEventListener('click', () => {
             vendaDiaContainer.classList.remove('hidden');
@@ -2552,7 +2633,14 @@ function setupComissaoEditing() {
                 renderTabelaAnaliseComissao(); // A forma mais simples de restaurar
                 return;
             }
-
+            // --- NOVA LÓGICA DE CONFIRMAÇÃO ---
+            // Usa o confirm() do navegador para fazer a pergunta.
+            // Se o usuário clicar em "Cancelar", a função para aqui.
+            if (!confirm(`Deseja salvar a nova comissão de ${novoPercentual.toFixed(2)}% para esta venda?`)) {
+                renderTabelaAnaliseComissao(); // Restaura a tabela para o estado original
+                return;
+            }
+            // --- FIM DA NOVA LÓGICA ---
             // 3. Recalcula e prepara os dados para salvar
             const novoPercentualDecimal = novoPercentual / 100;
             const valorTotalVenda = (venda.valor || 0) * (venda.quantidade || 0);
@@ -2682,7 +2770,7 @@ function renderTabelaHistoricoAluguel() {
 // ==========================================================
 
 // ==========================================================
-//       INÍCIO DA AÇÃO 1: AJUSTAR TABELA DE ANÁLISE
+//       INÍCIO DA AÇÃO: CORRIGIR TABELA DE ANÁLISE DETALHADA
 // ==========================================================
 
 function renderTabelaAnaliseComissao() {
@@ -2695,10 +2783,34 @@ function renderTabelaAnaliseComissao() {
     vendasOrdenadas.forEach(venda => {
         const loja = lojas.find(l => l.id == venda.lojaId);
         const valorTotal = (venda.valor || 0) * (venda.quantidade || 0);
-        const percentualComissao = venda.percentualComissaoCalculado || 0;
-        const valorComissao = venda.valorComissaoCalculado || 0;
+        
+        // --- INÍCIO DA NOVA LÓGICA DE CÁLCULO ---
+        let percentualComissao, valorComissao;
 
-        // Adicionamos um data-id na linha (<tr>) para facilitar a identificação
+        // 1. VERIFICA SE A VENDA JÁ TEM A COMISSÃO SALVA
+        if (typeof venda.percentualComissaoCalculado === 'number') {
+            // Se sim, usa os valores salvos (vendas novas)
+            percentualComissao = venda.percentualComissaoCalculado;
+            valorComissao = venda.valorComissaoCalculado;
+        } else {
+            // 2. SE NÃO, CALCULA AGORA (vendas antigas)
+            if (loja) {
+                const regra = getComissaoVigente(venda.data, loja.id, loja.tipo, venda.modeloVenda);
+                if (regra) {
+                    percentualComissao = regra.percentual;
+                    valorComissao = valorTotal * percentualComissao;
+                } else {
+                    // Se não encontrar regra, define como 0
+                    percentualComissao = 0;
+                    valorComissao = 0;
+                }
+            } else {
+                percentualComissao = 0;
+                valorComissao = 0;
+            }
+        }
+        // --- FIM DA NOVA LÓGICA ---
+
         const row = `<tr data-id="${venda.id}">
             <td>${new Date(venda.data + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
             <td>${loja ? loja.nome : 'N/A'}</td>
@@ -2708,14 +2820,10 @@ function renderTabelaAnaliseComissao() {
             <td>${(venda.valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
             <td>${venda.quantidade || 0}</td>
             <td>${valorTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-            
-            <!-- CÉLULA DE % COMISSÃO ATUALIZADA -->
             <td class="comissao-percentual-cell">
                 <span>${(percentualComissao * 100).toFixed(2)}%</span>
                 <button class="btn-edit-comissao" title="Editar comissão">✏️</button>
             </td>
-            
-            <!-- CÉLULA DE R$ COMISSÃO COM CLASSE PARA ATUALIZAÇÃO -->
             <td class="comissao-valor-cell">
                 ${valorComissao.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
             </td>
@@ -2726,7 +2834,7 @@ function renderTabelaAnaliseComissao() {
 }
 
 // ==========================================================
-//                        FIM DA AÇÃO 1
+//                        FIM DA AÇÃO
 // ==========================================================
 
 
@@ -3075,9 +3183,8 @@ function getAluguelVigente(dataReferencia, lojaId, tipoLoja) {
 // ==========================================================
 //       INÍCIO DA AÇÃO: AJUSTAR CÁLCULO DO ALUGUEL
 // ==========================================================
-
 // ==========================================================
-//       INÍCIO DA AÇÃO 2: CALCULAR E EXIBIR O TOTAL A PAGAR
+//       INÍCIO DA AÇÃO: CORRIGIR CÁLCULO PARA VENDAS ANTIGAS
 // ==========================================================
 
 function renderTabelaResumoComissao() {
@@ -3103,22 +3210,42 @@ function renderTabelaResumoComissao() {
         return monthMatch && yearMatch;
     });
 
-    const comissaoPorLoja = vendasFiltradas.reduce((acc, v) => {
-        if (!acc[v.lojaId]) {
-            acc[v.lojaId] = 0;
+    // --- LÓGICA DE AGRUPAMENTO ATUALIZADA ---
+    const comissaoPorLoja = vendasFiltradas.reduce((acc, venda) => {
+        let valorComissaoDaVenda = 0;
+
+        // 1. VERIFICA SE A VENDA JÁ TEM A COMISSÃO CALCULADA E SALVA
+        if (typeof venda.valorComissaoCalculado === 'number') {
+            // Se sim, usa o valor salvo. É o caso das vendas novas.
+            valorComissaoDaVenda = venda.valorComissaoCalculado;
+        } else {
+            // 2. SE NÃO, É UMA VENDA ANTIGA. CALCULA A COMISSÃO AGORA.
+            const lojaDaVenda = lojas.find(l => l.id === venda.lojaId);
+            if (lojaDaVenda) {
+                const regra = getComissaoVigente(venda.data, lojaDaVenda.id, lojaDaVenda.tipo, venda.modeloVenda);
+                if (regra) {
+                    const valorTotalVenda = (venda.valor || 0) * (venda.quantidade || 0);
+                    valorComissaoDaVenda = valorTotalVenda * regra.percentual;
+                }
+            }
         }
-        acc[v.lojaId] += (v.valorComissaoCalculado || 0);
+
+        // Adiciona o valor (calculado ou pego do cache) ao total da loja
+        if (!acc[venda.lojaId]) {
+            acc[venda.lojaId] = 0;
+        }
+        acc[venda.lojaId] += valorComissaoDaVenda;
+        
         return acc;
     }, {});
 
     tabelaBody.innerHTML = '';
-    
-    // 1. INICIA UMA VARIÁVEL PARA SOMAR O TOTAL A PAGAR
     let totalAPagarGeral = 0;
 
     lojas.forEach(loja => {
         const comissaoTotal = comissaoPorLoja[loja.id] || 0;
 
+        // Lógica do aluguel (inalterada)
         let aluguelFinal = 0;
         if (selectedMonth !== 'all' && selectedYear !== 'all') {
             const anoFiltrado = parseInt(selectedYear);
@@ -3138,8 +3265,6 @@ function renderTabelaResumoComissao() {
         }
         
         const valorAPagar = Math.max(comissaoTotal, aluguelFinal);
-
-        // 2. SOMA O VALOR "A PAGAR" DE CADA LOJA AO TOTAL GERAL
         totalAPagarGeral += valorAPagar;
 
         const row = `<tr>
@@ -3152,9 +3277,13 @@ function renderTabelaResumoComissao() {
         tabelaBody.innerHTML += row;
     });
 
-    // 3. ATUALIZA O TEXTO DO NOVO CARD COM O TOTAL CALCULADO
     document.getElementById('card-total-a-pagar').textContent = totalAPagarGeral.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
+
+// ==========================================================
+//                        FIM DA AÇÃO
+// ==========================================================
+
 
 // ==========================================================
 //                        FIM DA AÇÃO 2
@@ -3713,73 +3842,109 @@ function renderProdutosLista() {
         }
         filterMonth.value = new Date().getMonth();
         filterYear.value = currentYear;
-        filterMonth.onchange = updateDashboard;
-        filterYear.onchange = updateDashboard;
+    filterMonth.onchange = runDashboardUpdate; // Antes era updateDashboard
+    filterYear.onchange = runDashboardUpdate;  // Antes era updateDashboard
     }
     
-    function getFilteredVendas() {
-        const selectedMonth = filterMonth.value;
-        const selectedYear = filterYear.value;
-        return vendas.filter(venda => {
-            const vendaDate = new Date(venda.data + 'T00:00:00');
-            const monthMatch = (selectedMonth === 'all') || (vendaDate.getMonth() == selectedMonth);
-            const yearMatch = (selectedYear === 'all') || (vendaDate.getFullYear() == selectedYear);
-            return monthMatch && yearMatch;
-        });
+// ==========================================================
+//       INÍCIO DA AÇÃO 1: RESTAURAR A FUNÇÃO ORIGINAL
+// ==========================================================
+
+function getFilteredVendas() {
+    const selectedMonth = filterMonth.value;
+    const selectedYear = filterYear.value;
+
+    return vendas.filter(venda => {
+        const vendaDate = new Date(venda.data + 'T00:00:00');
+        const monthMatch = (selectedMonth === 'all') || (vendaDate.getMonth() == selectedMonth);
+        const yearMatch = (selectedYear === 'all') || (vendaDate.getFullYear() == selectedYear);
+        
+        // A função correta para o dashboard principal só precisa disso:
+        return monthMatch && yearMatch;
+    });
+}
+function applyDashboardLojaFilter(vendasParaFiltrar) {
+    const selectedLoja = document.getElementById('filter-loja').value;
+
+    if (selectedLoja === 'all') {
+        return vendasParaFiltrar; // Se "Todas" estiver selecionado, não faz nada
     }
 
+    // Filtra o array de vendas recebido pelo ID da loja
+    return vendasParaFiltrar.filter(venda => venda.lojaId === selectedLoja);
+}
+
 // ==========================================================
-//           INÍCIO DA CORREÇÃO (CÁLCULO DOS CARDS v3)
+//                        FIM DA AÇÃO 1
 // ==========================================================
-function updateDashboard() {
+
+// ==========================================================
+//       INÍCIO DA AÇÃO 2: CRIAR FUNÇÃO "MAESTRO"
+// ==========================================================
+
+function runDashboardUpdate() {
+    // 1. Pega os dados filtrados por data
+    let vendasFiltradasData = getFilteredVendas();
+
+    // 2. Aplica o filtro de loja do dashboard principal
+    let vendasParaDashboard = applyDashboardLojaFilter(vendasFiltradasData);
+
+    // 3. Chama a função de desenhar o dashboard, passando os dados corretos
+    updateDashboard(vendasParaDashboard);
+
+    // 4. Chama a função de desenhar a tabela de detalhamento, passando os dados filtrados APENAS por data
+    updateDetalheVendasTable(vendasFiltradasData);
+}
+
+// ==========================================================
+//                        FIM DA AÇÃO 2
+// ==========================================================
+
+// ==========================================================
+//       INÍCIO DA AÇÃO 1: RESTAURAR E AJUSTAR updateDashboard
+// ==========================================================
+
+// A função agora RECEBE os dados que deve usar
+function updateDashboard(vendasFiltradas) { 
     document.getElementById('venda-dia-chart').closest('.chart-wrapper').style.height = '350px';
 
-    const vendasFiltradas = getFilteredVendas();
+    // REMOVEMOS a linha que aplicava o filtro de loja daqui de dentro.
+
     const vendaTotal = vendasFiltradas.reduce((sum, v) => sum + (v.valor * v.quantidade), 0);
     const totalUnidades = vendasFiltradas.reduce((sum, v) => sum + v.quantidade, 0);
     const ticketMedio = totalUnidades > 0 ? vendaTotal / totalUnidades : 0;
 
-    // --- LÓGICA FINAL E REFINADA PARA VENDA MÉDIA/DIA ---
+    // --- Lógica de Venda Média/Dia (inalterada) ---
     const selectedMonth = filterMonth.value;
     const selectedYear = filterYear.value;
     let numeroDeDiasParaMedia;
-
     const hoje = new Date();
     const anoAtual = hoje.getFullYear();
     const mesAtual = hoje.getMonth();
-
     if (selectedMonth !== 'all' && selectedYear !== 'all') {
         const anoSelecionadoInt = parseInt(selectedYear);
         const mesSelecionadoInt = parseInt(selectedMonth);
-
         if (anoSelecionadoInt === anoAtual && mesSelecionadoInt === mesAtual) {
-            // CASO 1: É o mês e ano ATUAIS.
             if (vendasFiltradas.length > 0) {
-                // Pega o dia da última venda registrada no período.
                 const ultimoDiaComVenda = Math.max(...vendasFiltradas.map(v => new Date(v.data + 'T00:00:00').getDate()));
                 numeroDeDiasParaMedia = ultimoDiaComVenda;
             } else {
-                // Se não houver vendas no mês atual ainda, a média é 0, dividindo por 1 para evitar erro.
                 numeroDeDiasParaMedia = 1;
             }
         } else {
-            // CASO 2: É um mês passado. A média é dividida pelo total de dias daquele mês.
             numeroDeDiasParaMedia = new Date(anoSelecionadoInt, mesSelecionadoInt + 1, 0).getDate();
         }
     } else {
-        // Fallback: se nenhum filtro de data está aplicado, usa dias com vendas.
         numeroDeDiasParaMedia = new Set(vendas.map(v => v.data)).size || 1;
     }
-
     const vendaMediaDia = numeroDeDiasParaMedia > 0 ? vendaTotal / numeroDeDiasParaMedia : 0;
-    // --- FIM DA LÓGICA FINAL ---
-
+    
+    // --- Atualização dos cards e gráficos (inalterada) ---
     document.getElementById('card-venda-total').textContent = vendaTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     document.getElementById('card-unidades').textContent = totalUnidades;
     document.getElementById('card-ticket-medio').textContent = ticketMedio.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     document.getElementById('card-venda-media').textContent = vendaMediaDia.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     
-    // O restante da função continua igual...
     updateRankingLojasChart(vendasFiltradas);
     updateRankingModeloChart(vendasFiltradas);
     updateVendaTipoLojaChart(vendasFiltradas);
@@ -3790,12 +3955,14 @@ function updateDashboard() {
     updateVendaSemanaChart(vendasFiltradas);
     updateVendaMensalChart();
     updateVendaAnualChart();
-    updateDetalheVendasTable(vendasFiltradas);
+    
+    // IMPORTANTE: A tabela de detalhamento agora é chamada de outro lugar
+    // updateDetalheVendasTable(vendasFiltradas); 
 }
-// ==========================================================
-//                        FIM DA CORREÇÃO
-// ==========================================================
 
+// ==========================================================
+//                        FIM DA AÇÃO 1
+// ==========================================================
 
 
 
@@ -4628,9 +4795,15 @@ function populateAluguelLojaSelect() {
 }
 
 // ==========================================================
-//                        FIM DA AÇÃO 3
+//       INÍCIO DA AÇÃO: CORRIGIR E LIMPAR A FUNÇÃO renderAll
 // ==========================================================
+
+// ==========================================================
+//       INÍCIO DA AÇÃO: CORRIGIR A FUNÇÃO renderAll (DE NOVO)
+// ==========================================================
+
 function renderAll() {
+    // ETAPA 1: Renderiza todas as tabelas com os dados completos
     renderTabelaLojas();
     renderProdutosLista();
     renderTabelaVendas();
@@ -4639,6 +4812,7 @@ function renderAll() {
     renderTabelaHistoricoComissao();
     renderTabelaHistoricoAluguel();
     
+    // ETAPA 2: Popula todos os seletores e datalists
     populateLojasSelect();
     populateProdutosSelect();
     populateVendasFilters();
@@ -4646,9 +4820,20 @@ function renderAll() {
     populateAluguelLojaSelect();
     populateComissaoLojaSelect();
     populateGRCSugestoes(); 
-    setupComissaoEditing(); 
-    updateDashboard();
+    
+    // ADICIONE A LINHA DE VOLTA AQUI!
+    populateDashboardLojaFilter(); 
+    
+    // ETAPA 3: Configura as interatividades
+    setupComissaoEditing();
+    
+    // ETAPA 4: ATUALIZA O DASHBOARD UMA ÚNICA VEZ, NO FINAL DE TUDO
+    runDashboardUpdate(); 
 }
+
+// ==========================================================
+//                        FIM DA AÇÃO
+// ==========================================================
 
 
 
@@ -4664,4 +4849,4 @@ function renderAll() {
 
 
 
-Manus
+Manus | VP Analytics
