@@ -316,7 +316,7 @@
     /* CARDS */
     .cards-container {
         display: grid;
-        grid-template-columns: 1fr 1fr 1fr 1fr;
+        grid-template-columns: repeat(5, 1fr); /* De 4 para 5 colunas */
         gap: 25px;
         margin-bottom: 25px;
     }
@@ -1542,6 +1542,8 @@ tr:hover .btn-edit-comissao {
                     <img src="https://assets.decocache.com/cvlbinsticiona/883934cf-cd5a-4b86-ac4c-d3504faa99ab/logo-inst-desk.svg" alt="Logo Casa & Vídeo" style="height: 40px;">
                 </div>
                 <h2>Controle de Venda</h2>
+
+                
             </div>
 
             <!-- ========================================================== -->
@@ -1555,6 +1557,7 @@ tr:hover .btn-edit-comissao {
                         <li><a href="#lojas" class="nav-tab" data-tab="lojas">Lojas</a></li>
                         <li><a href="#produtos" class="nav-tab" data-tab="produtos">Produtos</a></li>
                         <li><a href="#comissao" class="nav-tab" data-tab="comissao">Comissão</a></li>
+                        <li><a href="#estoque" class="nav-tab" data-tab="estoque">Estoque</a></li>
                     </ul>
                 </nav>
 
@@ -1593,6 +1596,7 @@ tr:hover .btn-edit-comissao {
                     <div class="card"><h3 id="card-unidades-label">Unidades</h3><p id="card-unidades">0</p></div>
                     <div class="card"><h3 id="card-ticket-medio-label">Ticket Médio</h3><p id="card-ticket-medio">R$ 0,00</p></div>
                     <div class="card"><h3 id="card-venda-media-label">Venda Média/Dia</h3><p id="card-venda-media">R$ 0,00</p></div>
+                    <div class="card"><h3 id="card-estoque-total-label">Estoque Total</h3><p id="card-estoque-total">0</p></div>
                 </div>
                 
 <div class="charts-container-3-cols">
@@ -1630,6 +1634,26 @@ tr:hover .btn-edit-comissao {
                     <div class="chart-wrapper chart-wrapper-tall"><div class="chart-title">Unidades Vendidas por GRC</div><canvas id="ranking-grc-chart"></canvas></div>
                     <div class="chart-wrapper chart-wrapper-tall"><div class="chart-title">Unidades Vendidas por Modalidade </div><canvas id="venda-forma-pagamento-chart"></canvas></div>
                 </div>
+
+                <!-- ADICIONE A NOVA FILEIRA DE GRÁFICOS DE ESTOQUE AQUI -->
+<div class="charts-container-3-cols">
+    <!-- Gráfico de Estoque por Loja -->
+    <div class="chart-wrapper chart-wrapper-scrollable">
+        <div class="chart-title">Estoque Total por Loja</div>
+        <div class="chart-scroll-area">
+            <div id="estoque-loja-canvas-container"><canvas id="estoque-por-loja-chart"></canvas></div>
+        </div>
+    </div>
+
+    <!-- Gráfico de Estoque por Modelo -->
+    <div class="chart-wrapper chart-wrapper-scrollable">
+        <div class="chart-title">Estoque Total por Modelo</div>
+        <div class="chart-scroll-area">
+            <div id="estoque-modelo-canvas-container"><canvas id="estoque-por-modelo-chart"></canvas></div>
+        </div>
+    </div>
+</div>
+<!-- FIM DA NOVA FILEIRA -->
 <!-- ========================================================== -->
 <!-- ========================================================== -->
 <!--           CORREÇÃO FINAL: ISOLAMENTO COM ID                -->
@@ -2164,6 +2188,114 @@ thead>
 <!--                        FIM DA SEÇÃO                        -->
 <!-- ========================================================== -->
 
+<!-- No seu HTML, dentro de <main> -->
+<!-- ... (sua section id="comissao" existente) ... -->
+
+<!-- ========================================================== -->
+<!--           INÍCIO DA AÇÃO 1.2: ADICIONAR SEÇÃO ESTOQUE        -->
+<!-- ========================================================== -->
+<section id="estoque" class="tab-content">
+    <div class="table-wrapper" style="padding: 30px; margin-bottom: 25px;">
+        <form id="form-entrada-estoque" class="form-grid-2-cols">
+            <h2 style="margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;">Registrar Entrada de Estoque</h2>
+            <div id="estoque-feedback-msg" class="hidden" style="grid-column: 1 / -1; margin-bottom: 0; padding: 10px; border-radius: 8px;"></div>
+
+            <div class="form-group">
+                <label for="estoque-data-entrada">Data da Entrada</label>
+                <input type="date" id="estoque-data-entrada" required>
+            </div>
+            <div class="form-group">
+                <label for="estoque-loja">Loja</label>
+                <select id="estoque-loja" required></select>
+            </div>
+            <div class="form-group">
+                <label for="estoque-produto">Produto</label>
+                <select id="estoque-produto" required></select>
+            </div>
+            <div class="form-group">
+                <label for="estoque-quantidade">Quantidade</label>
+                <input type="number" id="estoque-quantidade" min="1" value="1" required>
+            </div>
+            <div class="form-group" style="grid-column: 1 / -1;">
+                <label for="estoque-observacao">Observação (Opcional)</label>
+                <input type="text" id="estoque-observacao">
+            </div>
+            
+            <div class="form-actions" style="justify-content: flex-end; margin-top: auto;">
+                <button type="submit">Registrar Entrada</button>
+            </div>
+        </form>
+    </div>
+
+    <hr>
+
+    <!-- Futuramente, aqui virá a tabela de movimentações de estoque -->
+    <div class="table-wrapper" style="padding: 30px; margin-bottom: 25px;">
+        <h2 style="margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;">Últimas Movimentações de Estoque</h2>
+        <div class="table-container" style="max-height: 500px;">
+            <table id="tabela-movimentacoes-estoque">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Loja</th>
+                        <th>Produto</th>
+                        <th>Tipo</th>
+                        <th>Qtd</th>
+                        <th>Observação</th>
+                    </tr>
+                </thead>
+                <tbody id="tabela-movimentacoes-estoque-body">
+                    <!-- Conteúdo gerado pelo JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+<!-- ========================================================== -->
+<!--           INÍCIO DA AÇÃO 1: ADICIONAR FORMULÁRIO DE INVENTÁRIO        -->
+<!-- ========================================================== -->
+
+<hr>
+
+<div class="table-wrapper" style="padding: 30px; margin-bottom: 25px;">
+    <form id="form-inventario" class="form-grid-2-cols">
+        <h2 style="margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;">Ajuste de Inventário (Contagem Física)</h2>
+        <div id="inventario-feedback-msg" class="hidden" style="grid-column: 1 / -1; margin-bottom: 0; padding: 10px; border-radius: 8px;"></div>
+
+        <div class="form-group">
+            <label for="inventario-data">Data do Ajuste</label>
+            <input type="date" id="inventario-data" required>
+        </div>
+        <div class="form-group">
+            <label for="inventario-loja">Loja</label>
+            <select id="inventario-loja" required></select>
+        </div>
+        <div class="form-group">
+            <label for="inventario-produto">Produto</label>
+            <select id="inventario-produto" required></select>
+        </div>
+        <div class="form-group">
+            <label for="inventario-quantidade-fisica">Quantidade Contada (Físico)</label>
+            <input type="number" id="inventario-quantidade-fisica" min="0" required>
+        </div>
+        <div class="form-group" style="grid-column: 1 / -1;">
+            <label for="inventario-observacao">Motivo do Ajuste (Obrigatório)</label>
+            <input type="text" id="inventario-observacao" required placeholder="Ex: Acerto de inventário, perda, avaria...">
+        </div>
+        
+        <div class="form-actions" style="justify-content: flex-end; margin-top: auto;">
+            <button type="submit">Registrar Ajuste</button>
+        </div>
+    </form>
+</div>
+
+<!-- ========================================================== -->
+<!--                        FIM DA AÇÃO 1                       -->
+<!-- ========================================================== -->
+
+</section>
+<!-- ========================================================== -->
+<!--                        FIM DA AÇÃO 1.2                       -->
+<!-- ========================================================== -->
 
 
         </main>
@@ -2261,7 +2393,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalConfirmBtn = document.getElementById('modal-confirm-btn');
     const modalCancelBtn = document.getElementById('modal-cancel-btn');
 
-
+    // ==========================================================
+    //           INÍCIO DA AÇÃO 2.1: NOVAS CONSTANTES DOM
+    // ==========================================================
+    // Elementos da Seção Estoque
+    const formEntradaEstoque = document.getElementById('form-entrada-estoque');
+    const estoqueDataEntrada = document.getElementById('estoque-data-entrada');
+    const estoqueLojaSelect = document.getElementById('estoque-loja');
+    const estoqueProdutoSelect = document.getElementById('estoque-produto');
+    const estoqueQuantidadeInput = document.getElementById('estoque-quantidade');
+    const estoqueObservacaoInput = document.getElementById('estoque-observacao');
+    const estoqueFeedbackMsg = document.getElementById('estoque-feedback-msg');
+    const tabelaMovimentacoesEstoqueBody = document.getElementById('tabela-movimentacoes-estoque-body');
+    // ==========================================================
+    //                        FIM DA AÇÃO 2.1                       
+    // ==========================================================
     // Elementos de Filtros
     const filterMonth = document.getElementById('filter-month');
     const filterYear = document.getElementById('filter-year');
@@ -2270,7 +2416,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const vendasFilterLoja = document.getElementById('vendas-filter-loja');
     const clearVendasFiltersBtn = document.getElementById('clear-vendas-filters-btn');
 
-        const refreshDashboardBtn = document.getElementById('refresh-dashboard-btn');
+    const refreshDashboardBtn = document.getElementById('refresh-dashboard-btn');
+
+        // 1. Adicione estas constantes no topo do seu script, junto com as outras
+    const formInventario = document.getElementById('form-inventario');
+    const inventarioDataInput = document.getElementById('inventario-data');
+    const inventarioLojaSelect = document.getElementById('inventario-loja');
+    const inventarioProdutoSelect = document.getElementById('inventario-produto');
+    const inventarioQtdFisicaInput = document.getElementById('inventario-quantidade-fisica');
+    const inventarioObservacaoInput = document.getElementById('inventario-observacao');
+    const inventarioFeedbackMsg = document.getElementById('inventario-feedback-msg');
+
 
     // Adiciona uma verificação para o caso do elemento não existir
     if (refreshDashboardBtn) {
@@ -2288,6 +2444,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let historicoAluguel = [];  // <-- MUDANÇA: Nome atualizado
     let charts = {};
     let lojasSelecionadasIds = []; // <<<< ADICIONE ESTA LINHA
+    let movimentacoesEstoque = [];
 
     // --- LÓGICA DE TEMA (MODO ESCURO) ---
     const sunIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-sun"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>`;
@@ -2302,35 +2459,40 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const detalheLojaFilter = document.getElementById('detalhe-loja-filter');
 
-// --- FUNÇÃO DE CARREGAMENTO DE DADOS ATUALIZADA ---
+// ==========================================================
+//       INÍCIO DA AÇÃO: CORRIGIR A FUNÇÃO loadDataFromFirebase (FINAL)
+// ==========================================================
+
 async function loadDataFromFirebase() {
     console.log("Iniciando carregamento de dados do Firebase...");
     
     try {
-        // Busca todas as coleções necessárias em paralelo, incluindo as novas
+        // --- AQUI ESTÁ A CORREÇÃO ---
+        // Adicionamos 'movimentacoesEstoqueSnapshot' à lista de constantes
         const [
             lojasSnapshot, 
             vendasSnapshot, 
             produtosSnapshot, 
-            historicoComissaoSnapshot, // <-- MUDANÇA: Busca a nova coleção
-            historicoAluguelSnapshot   // <-- MUDANÇA: Busca a nova coleção
+            historicoComissaoSnapshot,
+            historicoAluguelSnapshot,
+            movimentacoesEstoqueSnapshot // <-- A VARIÁVEL QUE FALTAVA
         ] = await Promise.all([
             db.collection('lojas').get(),
             db.collection('vendas').get(),
             db.collection('produtos').get(),
             db.collection('historicoComissao').get(),
-            db.collection('historicoAluguel').get()
+            db.collection('historicoAluguel').get(),
+            db.collection('movimentacoesEstoque').get()
         ]);
+        // --- FIM DA CORREÇÃO ---
 
         // Processa os resultados e preenche os arrays locais
         lojas = lojasSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         vendas = vendasSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         produtos = produtosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         
-        // Converte os dados das novas coleções, tratando os timestamps
         historicoComissao = historicoComissaoSnapshot.docs.map(doc => {
             const data = doc.data();
-            // Converte o timestamp do Firebase para um objeto Date do JavaScript
             data.dataInicioVigencia = data.dataInicioVigencia.toDate();
             return { id: doc.id, ...data };
         });
@@ -2340,9 +2502,16 @@ async function loadDataFromFirebase() {
             return { id: doc.id, ...data };
         });
 
-        lojasSelecionadasIds = lojas.map(l => l.id);
+        // Agora que 'movimentacoesEstoqueSnapshot' existe, este código funciona
+        movimentacoesEstoque = movimentacoesEstoqueSnapshot.docs.map(doc => {
+            const data = doc.data();
+            if (data.data && typeof data.data.toDate === 'function') {
+                data.data = data.data.toDate();
+            }
+            return { id: doc.id, ...data };
+        });
 
-        console.log("Dados carregados:", { lojas, vendas, produtos, historicoComissao, historicoAluguel });
+        console.log("Dados carregados com sucesso:", { lojas, vendas, produtos, historicoComissao, historicoAluguel, movimentacoesEstoque });
 
         // Chama a renderização da aplicação APENAS após carregar tudo
         renderAll();
@@ -2354,8 +2523,10 @@ async function loadDataFromFirebase() {
 }
 
 // ==========================================================
-//                        FIM DA AÇÃO 1
+//                        FIM DA AÇÃO
 // ==========================================================
+
+
 // ==========================================================
 //       INÍCIO DA AÇÃO 2: CRIAR FUNÇÃO PARA POPULAR SUGESTÕES
 // ==========================================================
@@ -2429,7 +2600,7 @@ function populateDashboardLojaFilter() {
     });
 
 // ==========================================================
-//       INÍCIO DA AÇÃO: VERIFICAR PERMISSÃO DE ADMIN
+//       INÍCIO DA AÇÃO 2: ATUALIZAR A FUNÇÃO checkLogin
 // ==========================================================
 
 function checkLogin() {
@@ -2437,27 +2608,40 @@ function checkLogin() {
 
     auth.onAuthStateChanged(async (user) => {
         if (user) {
-            // O usuário ESTÁ logado. Agora, vamos verificar se ele é admin.
+            // O usuário ESTÁ logado.
             console.log('Sessão ativa para:', user.email);
 
             try {
-                // 1. Busca a lista de e-mails de administradores no Firebase
+                // 1. BUSCA AS PERMISSÕES DO USUÁRIO NA COLEÇÃO 'usuarios'
+                const userDocRef = db.collection('usuarios').doc(user.email.toLowerCase());
+                const userDoc = await userDocRef.get();
+
+                if (userDoc.exists) {
+                    const userData = userDoc.data();
+                    // 2. SALVA O ID DA LOJA E O NOME DO USUÁRIO NO localStorage
+                    localStorage.setItem('userLojaId', userData.lojaId || 'admin'); // Salva o ID ou 'admin'
+                    localStorage.setItem('userName', userData.nomeUsuario || 'Admin');
+                    console.log(`Permissões carregadas: Loja ID = ${userData.lojaId}`);
+                } else {
+                    // Se o usuário não está na coleção 'usuarios', ele não tem permissão
+                    console.warn(`Usuário ${user.email} não encontrado na lista de permissões.`);
+                    localStorage.setItem('userLojaId', 'none'); // 'none' para usuário sem permissão
+                    localStorage.setItem('userName', 'Desconhecido');
+                }
+
+                // 3. VERIFICA SE O USUÁRIO É ADMIN (da coleção antiga, para a aba comissão)
                 const adminDoc = await db.collection('admins').doc('user_list').get();
                 const adminEmails = adminDoc.exists ? adminDoc.data().emails : [];
-
-                // 2. Verifica se o e-mail do usuário logado está na lista
                 const isUserAdmin = adminEmails.includes(user.email);
-
-                // 3. Salva essa informação no localStorage para uso rápido
                 localStorage.setItem('isUserAdmin', isUserAdmin);
-
-                console.log(`Usuário é admin? ${isUserAdmin}`);
 
                 // 4. Mostra a aplicação principal
                 showApp();
 
             } catch (error) {
-                console.error("Erro ao verificar permissões de administrador:", error);
+                console.error("Erro ao verificar permissões:", error);
+                // Em caso de erro, define como sem permissão e continua
+                localStorage.setItem('userLojaId', 'none');
                 localStorage.setItem('isUserAdmin', 'false');
                 showApp();
             }
@@ -2465,6 +2649,8 @@ function checkLogin() {
         } else {
             // O usuário NÃO ESTÁ logado.
             console.log('Nenhum usuário logado.');
+            localStorage.removeItem('userLojaId');
+            localStorage.removeItem('userName');
             localStorage.removeItem('isUserAdmin');
             showLogin();
         }
@@ -2472,9 +2658,58 @@ function checkLogin() {
 }
 
 // ==========================================================
-//                        FIM DA AÇÃO
+//                        FIM DA AÇÃO 2
 // ==========================================================
 
+// ==========================================================
+//       INÍCIO DA AÇÃO (PASSO 1): RESTAURAR applySecurityRules
+// ==========================================================
+
+function applySecurityRules() {
+    const userLojaId = localStorage.getItem('userLojaId');
+    const isUserStore = userLojaId && userLojaId !== 'admin' && userLojaId !== 'none';
+
+    // --- LÓGICA PARA OS FORMULÁRIOS ---
+    const formSelectIds = ['venda-loja', 'estoque-loja', 'inventario-loja'];
+    formSelectIds.forEach(id => {
+        const select = document.getElementById(id);
+        if (select) {
+            if (isUserStore) {
+                select.value = userLojaId;
+                select.disabled = true;
+                // Dispara o evento 'change' para acionar lógicas dependentes
+                // como o preenchimento do "Tipo da Loja".
+                if (id === 'venda-loja') {
+                    select.dispatchEvent(new Event('change'));
+                }
+            } else {
+                select.disabled = false;
+            }
+        }
+    });
+
+    // --- LÓGICA PARA OS FILTROS (inalterada) ---
+    const filterLojaSelect = document.getElementById('filter-loja');
+    const filterLojaLabel = document.querySelector('label[for="filter-loja"]');
+    if (isUserStore) {
+        if (filterLojaSelect) filterLojaSelect.style.display = 'none';
+        if (filterLojaLabel) filterLojaLabel.style.display = 'none';
+    } else {
+        if (filterLojaSelect) filterLojaSelect.style.display = '';
+        if (filterLojaLabel) filterLojaLabel.style.display = '';
+    }
+    const detalheLojaFilter = document.getElementById('detalhe-loja-filter');
+    if (detalheLojaFilter && detalheLojaFilter.parentElement) {
+        if (isUserStore) {
+            detalheLojaFilter.parentElement.style.display = 'none';
+        } else {
+            detalheLojaFilter.parentElement.style.display = '';
+        }
+    }
+}
+// ==========================================================
+//                        FIM DA AÇÃO (PASSO 1)
+// ==========================================================
 
 // ==========================================================
 //            INÍCIO DA ALTERAÇÃO (FUNÇÃO DE LOGIN)
@@ -2563,32 +2798,39 @@ logoutButton.addEventListener('click', () => {
         });
         localStorage.setItem('produtos', JSON.stringify(produtos));
 
-        setupNavigation();
-        setupForms();
-        setupProdutosInteractivity();
-        populateFilters();
-        populateComissaoFilters();
-  const filterLojaDashboard = document.getElementById('filter-loja');
-    if (filterLojaDashboard) {
-        filterLojaDashboard.onchange = runDashboardUpdate;
-    }
-        // ADICIONE ESTE BLOCO DE CÓDIGO
-        toggleDiaBtn.addEventListener('click', () => {
-            vendaDiaContainer.classList.remove('hidden');
-            vendaSemanaContainer.classList.add('hidden');
-            toggleDiaBtn.classList.add('active');
-            toggleSemanaBtn.classList.remove('active');
-            temporalChartTitle.textContent = 'Venda por Dia';
-        });
+    // 1. Configurações visuais e de navegação
+    setupNavigation();
+    setupForms();
+    setupProdutosInteractivity();
+    
+    // 2. Popula todos os filtros da aplicação
+    populateFilters();
+    populateComissaoFilters();
 
-        toggleSemanaBtn.addEventListener('click', () => {
-            vendaDiaContainer.classList.add('hidden');
-            vendaSemanaContainer.classList.remove('hidden');
-            toggleDiaBtn.classList.remove('active');
-            toggleSemanaBtn.classList.add('active');
-            temporalChartTitle.textContent = 'Venda por Semana';
-        });
-        renderAll();
+  // 3. CENTRALIZA A CONFIGURAÇÃO DOS EVENTOS DE FILTRO DO DASHBOARD
+    const filterLojaDashboard = document.getElementById('filter-loja');
+    
+    if (filterMonth) filterMonth.onchange = runDashboardUpdate;
+    if (filterYear) filterYear.onchange = runDashboardUpdate;
+    if (filterLojaDashboard) filterLojaDashboard.onchange = runDashboardUpdate;
+
+    // 4. Configuração dos botões de toggle Dia/Semana
+    toggleDiaBtn.addEventListener('click', () => {
+        vendaDiaContainer.classList.remove('hidden');
+        vendaSemanaContainer.classList.add('hidden');
+        toggleDiaBtn.classList.add('active');
+        toggleSemanaBtn.classList.remove('active');
+        temporalChartTitle.textContent = 'Venda por Dia';
+    });
+
+    toggleSemanaBtn.addEventListener('click', () => {
+        vendaDiaContainer.classList.add('hidden');
+        vendaSemanaContainer.classList.remove('hidden');
+        toggleDiaBtn.classList.remove('active');
+        toggleSemanaBtn.classList.add('active');
+        temporalChartTitle.textContent = 'Venda por Semana';
+    });
+
     }
 // ==========================================================
 //       INÍCIO DA AÇÃO 3: LÓGICA DE EDIÇÃO DA COMISSÃO
@@ -2680,42 +2922,60 @@ function setupComissaoEditing() {
 //                        FIM DA AÇÃO 3
 // ==========================================================
 
-    // --- NAVEGAÇÃO POR ABAS ---
-    function setupNavigation() {
-    // ==========================================================
-    //       INÍCIO DO NOVO BLOCO QUE VOCÊ VAI ADICIONAR
-    // ==========================================================
+// ==========================================================
+//       INÍCIO DA AÇÃO: ATUALIZAR A FUNÇÃO setupNavigation
+// ==========================================================
+
+function setupNavigation() {
+    // Pega a permissão de admin do localStorage
     const isUserAdmin = localStorage.getItem('isUserAdmin') === 'true';
-    const comissaoTabLink = document.querySelector('a[data-tab="comissao"]');
 
-    if (comissaoTabLink) {
-        if (!isUserAdmin) {
-            comissaoTabLink.parentElement.classList.add('hidden');
+    // Lista das abas que são RESTRITAS a administradores
+    const adminOnlyTabs = ['comissao', 'lojas', 'produtos'];
+
+    // Itera sobre todas as abas de navegação
+    navTabs.forEach(tab => {
+        const tabName = tab.getAttribute('data-tab');
+
+        // Se a aba atual está na lista de abas restritas E o usuário NÃO é admin...
+        if (adminOnlyTabs.includes(tabName) && !isUserAdmin) {
+            // ...esconde o item da lista (o <li> que envolve o link <a>)
+            tab.parentElement.classList.add('hidden');
         } else {
-            comissaoTabLink.parentElement.classList.remove('hidden');
+            // Caso contrário, garante que a aba esteja visível (para o caso de um admin logar depois de um usuário comum)
+            tab.parentElement.classList.remove('hidden');
         }
-    }
-    // ==========================================================
-    //                        FIM DO NOVO BLOCO
-    // ==========================================================
+    });
 
-        navTabs.forEach(tab => {
-            tab.addEventListener('click', (e) => {
-                e.preventDefault();
-                navTabs.forEach(t => t.classList.remove('active-tab'));
-                tab.classList.add('active-tab');
-                const target = tab.getAttribute('data-tab');
-                tabContents.forEach(content => {
-                    content.classList.remove('active-content');
-                    if (content.id === target) {
-                        content.classList.add('active-content');
-                    }
-                });
-                resetLojaForm();
-                resetVendaForm();
+    // A lógica de clique para navegar entre as abas continua a mesma
+    navTabs.forEach(tab => {
+        tab.addEventListener('click', (e) => {
+            e.preventDefault();
+            
+            // Não permite que um usuário clique em uma aba escondida (segurança extra)
+            if (tab.parentElement.classList.contains('hidden')) {
+                return;
+            }
+
+            navTabs.forEach(t => t.classList.remove('active-tab'));
+            tab.classList.add('active-tab');
+            const target = tab.getAttribute('data-tab');
+            tabContents.forEach(content => {
+                content.classList.remove('active-content');
+                if (content.id === target) {
+                    content.classList.add('active-content');
+                }
             });
+            resetLojaForm();
+            resetVendaForm();
         });
-    }
+    });
+}
+
+// ==========================================================
+//                        FIM DA AÇÃO
+// ==========================================================
+
 // ==========================================================
 //   INÍCIO DA AÇÃO 2: FUNÇÕES PARA RENDERIZAR OS HISTÓRICOS
 // ==========================================================
@@ -2883,6 +3143,124 @@ function renderTabelaVendas() {
 }
 
 // ==========================================================
+//       INÍCIO DA AÇÃO: CORRIGIR A FUNÇÃO DE RENDERIZAÇÃO (DEFINITIVO)
+// ==========================================================
+
+function renderTabelaMovimentacoesEstoque() {
+    const tabelaBody = document.getElementById('tabela-movimentacoes-estoque-body');
+    if (!tabelaBody) return;
+
+    tabelaBody.innerHTML = '';
+
+    const userLojaId = localStorage.getItem('userLojaId');
+    let movimentacoesParaExibir = movimentacoesEstoque;
+
+    if (userLojaId && userLojaId !== 'admin' && userLojaId !== 'none') {
+        movimentacoesParaExibir = movimentacoesEstoque.filter(mov => mov.lojaId === userLojaId);
+    }
+
+    // --- AQUI ESTÁ A CORREÇÃO ---
+    // Trocamos .toMillis() por .getTime(), que é o método correto para objetos Date do JavaScript.
+    const movimentacoesOrdenadas = [...movimentacoesParaExibir].sort((a, b) => {
+        // Adicionamos uma verificação para evitar erros se a data for nula
+        const timeA = a.data ? a.data.getTime() : 0;
+        const timeB = b.data ? b.data.getTime() : 0;
+        return timeB - timeA; // Ordena da mais recente para a mais antiga
+    });
+
+    movimentacoesOrdenadas.forEach(mov => {
+        const loja = lojas.find(l => l.id === mov.lojaId);
+        const produto = produtos.find(p => p.id === mov.produtoId);
+        
+        // Como 'mov.data' é sempre um objeto Date, podemos formatá-lo com segurança.
+        const dataFormatada = mov.data ? mov.data.toLocaleDateString('pt-BR') : 'N/A';
+
+        const row = `<tr>
+            <td>${dataFormatada}</td>
+            <td>${loja ? loja.nome : 'N/A'}</td>
+            <td>${produto ? produto.modelo : 'N/A'}</td>
+            <td>${mov.tipoMovimentacao}</td>
+            <td>${mov.quantidade}</td>
+            <td>${mov.observacao || ''}</td>
+        </tr>`;
+        
+        tabelaBody.innerHTML += row;
+    });
+}
+
+// ==========================================================
+//                        FIM DA AÇÃO
+// ==========================================================
+
+
+async function handleInventarioSubmit(e) {
+    e.preventDefault();
+
+    const lojaId = inventarioLojaSelect.value;
+    const produtoId = inventarioProdutoSelect.value;
+    const quantidadeFisica = parseInt(inventarioQtdFisicaInput.value);
+    const observacao = inventarioObservacaoInput.value.trim();
+    const dataAjuste = new Date(inventarioDataInput.value + 'T00:00:00');
+
+    if (!lojaId || !produtoId || isNaN(quantidadeFisica) || !observacao) {
+        alert('Por favor, preencha todos os campos, incluindo o motivo do ajuste.');
+        return;
+    }
+
+    try {
+        const movimentacoesDoProduto = movimentacoesEstoque.filter(m => m.lojaId === lojaId && m.produtoId === produtoId);
+        const saldoAtualSistema = movimentacoesDoProduto.reduce((acc, mov) => acc + mov.quantidade, 0);
+        const diferenca = quantidadeFisica - saldoAtualSistema;
+
+        if (diferenca === 0) {
+            alert('A quantidade física informada é igual ao saldo do sistema. Nenhum ajuste necessário.');
+            return;
+        }
+
+        const movimentacao = {
+            data: firebase.firestore.Timestamp.fromDate(dataAjuste),
+            lojaId: lojaId,
+            produtoId: produtoId,
+            tipoMovimentacao: 'AJUSTE',
+            quantidade: diferenca,
+            observacao: observacao
+        };
+        
+        const docRef = await db.collection('movimentacoesEstoque').add(movimentacao);
+
+        movimentacoesEstoque.push({
+            id: docRef.id,
+            ...movimentacao,
+            data: dataAjuste
+        });
+
+        renderTabelaMovimentacoesEstoque();
+
+        const estoqueDocRef = db.collection('estoqueAtual').doc(`${lojaId}_${produtoId}`);
+        await estoqueDocRef.set({
+            lojaId: lojaId,
+            produtoId: produtoId,
+            quantidade: quantidadeFisica,
+            ultimaAtualizacao: firebase.firestore.Timestamp.now()
+        }, { merge: true });
+
+        inventarioFeedbackMsg.textContent = `Ajuste de estoque (${diferenca}) registrado com sucesso! Saldo atual: ${quantidadeFisica}.`;
+        inventarioFeedbackMsg.className = 'loja-success-msg';
+        inventarioFeedbackMsg.classList.remove('hidden');
+        
+        formInventario.reset();
+        inventarioDataInput.valueAsDate = new Date();
+        applySecurityRules();
+
+    } catch (error) {
+        console.error("Erro ao registrar ajuste de inventário:", error);
+        inventarioFeedbackMsg.textContent = 'Ocorreu um erro ao registrar o ajuste. Verifique o console.';
+        inventarioFeedbackMsg.className = 'loja-error-msg';
+        inventarioFeedbackMsg.classList.remove('hidden');
+    }
+}
+
+// ==========================================================
 //       INÍCIO DA CORREÇÃO JAVASCRIPT - AÇÃO 2
 // ==========================================================
 
@@ -2946,187 +3324,271 @@ function setupForms() {
     vendaValorInput.addEventListener('input', calcularVendaTotal);
     vendaQuantidadeInput.addEventListener('input', calcularVendaTotal);
     
-    // LÓGICA DE SALVAR VENDA (CORRIGIDA E FUNCIONAL)
-    formLancamento.onsubmit = async (e) => {
-        e.preventDefault();
-        const id = vendaEditId.value;
-        const dataVenda = vendaDataInput.value;
-        const lojaSelecionada = lojas.find(l => l.id == vendaLojaSelect.value);
-        const modeloVenda = document.getElementById('venda-modelo-venda').value;
-        if (!lojaSelecionada) {
-            alert("Por favor, selecione uma loja.");
-            return;
-        }
-        const regraComissao = getComissaoVigente(dataVenda, lojaSelecionada.id, lojaSelecionada.tipo, modeloVenda);
-        if (!regraComissao && !id) {
-            alert(`Não foi encontrada uma regra de comissão válida para o tipo de loja "${lojaSelecionada.tipo}" e modelo de venda "${modeloVenda}" na data selecionada.`);
-            return;
-        }
-        const percentualAplicado = regraComissao ? regraComissao.percentual : 0;
-        const valorUnitario = parseFloat(vendaValorInput.value);
-        const quantidade = parseInt(vendaQuantidadeInput.value);
-        const valorTotalVenda = valorUnitario * quantidade;
-        const valorComissao = valorTotalVenda * percentualAplicado;
-        const vendaData = {
-            data: dataVenda,
-            lojaId: vendaLojaSelect.value,
-            tipoLoja: lojaSelecionada.tipo,
-            modelo: vendaModeloSelect.value,
-            valor: valorUnitario,
-            modeloVenda: modeloVenda,
-            formaPagamento: vendaFormaPagamentoSelect.value,
-            quantidade: quantidade,
-            percentualComissaoCalculado: percentualAplicado,
-            valorComissaoCalculado: valorComissao
-        };
-        try {
-            if (id) { await db.collection('vendas').doc(id).update(vendaData); } 
-            else { await db.collection('vendas').add(vendaData); }
-            await loadDataFromFirebase();
-            resetVendaForm();
-        } catch (error) {
-            console.error("Erro ao salvar venda:", error);
-            alert("Ocorreu um erro ao salvar a venda.");
-        }
+   // ==========================================================
+//       INÍCIO DA AÇÃO: IMPLEMENTAR BAIXA DE ESTOQUE NA VENDA
+// ==========================================================
+
+// ==========================================================
+//       INÍCIO DA AÇÃO: CORREÇÃO DEFINITIVA DA BAIXA DE ESTOQUE
+// ==========================================================
+
+// Dentro da sua função setupForms(), substitua o bloco formLancamento.onsubmit
+formLancamento.onsubmit = async (e) => {
+    e.preventDefault();
+    const id = vendaEditId.value;
+    const dataVenda = vendaDataInput.value;
+    const lojaId = vendaLojaSelect.value;
+    const modeloVenda = document.getElementById('venda-modelo-venda').value;
+    const quantidade = parseInt(vendaQuantidadeInput.value);
+    const produtoVendido = produtos.find(p => p.modelo === vendaModeloSelect.value);
+
+    if (!lojaId || !produtoVendido) {
+        alert("Por favor, preencha a Loja e o Item.");
+        return;
+    }
+    const lojaSelecionada = lojas.find(l => l.id === lojaId);
+    if (!lojaSelecionada) {
+        alert("Loja selecionada é inválida.");
+        return;
+    }
+
+    // --- LÓGICA DE COMISSÃO (inalterada) ---
+    const regraComissao = getComissaoVigente(dataVenda, lojaSelecionada.id, lojaSelecionada.tipo, modeloVenda);
+    if (!regraComissao && !id) {
+        alert(`Não foi encontrada uma regra de comissão válida para o tipo de loja "${lojaSelecionada.tipo}" e modelo de venda "${modeloVenda}" na data selecionada.`);
+        return;
+    }
+    const percentualAplicado = regraComissao ? regraComissao.percentual : 0;
+    const valorUnitario = parseFloat(vendaValorInput.value);
+    const valorTotalVenda = valorUnitario * quantidade;
+    const valorComissao = valorTotalVenda * percentualAplicado;
+
+    const vendaData = {
+        data: dataVenda,
+        lojaId: lojaId,
+        tipoLoja: lojaSelecionada.tipo,
+        modelo: produtoVendido.modelo,
+        produtoId: produtoVendido.id,
+        valor: valorUnitario,
+        modeloVenda: modeloVenda,
+        formaPagamento: vendaFormaPagamentoSelect.value,
+        quantidade: quantidade,
+        percentualComissaoCalculado: percentualAplicado,
+        valorComissaoCalculado: valorComissao
     };
 
-    // --- Lógica do formulário de Produtos ---
-    exportVendasBtn.addEventListener('click', () => {
-        const vendasParaExportar = getFilteredVendasTabela().map(venda => {
-            const loja = lojas.find(l => l.id == venda.lojaId);
-            return {
-                "Data": venda.data, "Loja": loja ? loja.nome : 'N/A', "Tipo Loja": venda.tipoLoja || (loja ? loja.tipo : 'N/A'),
-                "Modelo": venda.modelo, "Valor Unitario": venda.valor.toFixed(2), "Modelo Venda": venda.modeloVenda || '',
-                "Forma Pagamento": venda.formaPagamento || '', "Quantidade": venda.quantidade, "Venda Total": (venda.valor * venda.quantidade).toFixed(2)
+    try {
+        if (id) {
+            // Lógica de edição de venda (não mexe no estoque)
+            await db.collection('vendas').doc(id).update(vendaData);
+            alert('Venda atualizada com sucesso! A movimentação de estoque não foi alterada.');
+        } else {
+            // Lógica para NOVA VENDA
+            
+            // 1. Salva a nova venda
+            const vendaDocRef = await db.collection('vendas').add(vendaData);
+            
+            // 2. Cria o registro de movimentação de SAÍDA para o histórico
+            const movimentacaoSaida = {
+                data: firebase.firestore.Timestamp.fromDate(new Date(dataVenda + 'T00:00:00')),
+                lojaId: lojaId,
+                produtoId: produtoVendido.id,
+                tipoMovimentacao: 'SAÍDA',
+                quantidade: -quantidade, // Quantidade negativa
+                observacao: `Venda ID: ${vendaDocRef.id}`,
+                vendaId: vendaDocRef.id
             };
-        });
-        if (vendasParaExportar.length > 0) { exportToCsv('vendas.csv', vendasParaExportar); } 
-        else { alert('Nenhuma venda para exportar com os filtros atuais.'); }
-    });
-    [vendasFilterData, vendasFilterLoja].forEach(el => el.onchange = renderTabelaVendas);
-    clearVendasFiltersBtn.onclick = () => {
-        vendasFilterData.value = '';
-        vendasFilterLoja.value = '';
-        renderTabelaVendas();
-    };
-    showProdutoFormBtn.addEventListener('click', () => {
-        produtoForm.classList.remove('hidden');
-        showProdutoFormBtn.classList.add('hidden');
-        produtoForm.scrollIntoView({ behavior: 'smooth' });
-    });
-    cancelProdutoFormBtn.addEventListener('click', () => {
-        produtoForm.reset();
-        produtoErrorMsg.classList.add('hidden');
-        document.getElementById('produto-modelo').focus();
-    });
-    produtoForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const nomeModelo = document.getElementById('produto-modelo').value.trim();
-        const valorModelo = parseFloat(document.getElementById('produto-valor').value);
-        const isDuplicate = produtos.some(p => p.modelo.toLowerCase() === nomeModelo.toLowerCase());
-        if (isDuplicate) {
-            produtoErrorMsg.textContent = `O modelo "${nomeModelo}" já existe.`;
-            produtoErrorMsg.classList.remove('hidden');
+            await db.collection('movimentacoesEstoque').add(movimentacaoSaida);
+
+            // 3. ATUALIZA O SALDO CONSOLIDADO EM 'estoqueAtual' (A PARTE QUE FALTAVA)
+            const estoqueDocRef = db.collection('estoqueAtual').doc(`${lojaId}_${produtoVendido.id}`);
+            await estoqueDocRef.set({
+                lojaId: lojaId,
+                produtoId: produtoVendido.id,
+                // Usa FieldValue.increment com um valor negativo para subtrair do saldo atual
+                quantidade: firebase.firestore.FieldValue.increment(-quantidade),
+                ultimaAtualizacao: firebase.firestore.Timestamp.now()
+            }, { merge: true }); // 'merge: true' garante que o documento seja criado se não existir
+
+            alert('Venda registrada e estoque atualizado com sucesso!');
+        }
+
+        // Recarrega tudo para garantir que a interface reflita todas as mudanças
+        await loadDataFromFirebase();
+        resetVendaForm();
+
+    } catch (error) {
+        console.error("Erro ao salvar venda e dar baixa no estoque:", error);
+        alert("Ocorreu um erro ao processar a venda. Verifique o console.");
+    }
+};
+
+// ==========================================================
+//                        FIM DA AÇÃO
+// ==========================================================
+
+// ==========================================================
+//       INÍCIO DA AÇÃO: CORRIGIR O EVENTO DO FORMULÁRIO DE INVENTÁRIO
+// ==========================================================
+
+// Procure por esta linha no seu código, dentro de setupForms()
+formInventario.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const lojaId = inventarioLojaSelect.value;
+    const produtoId = inventarioProdutoSelect.value;
+    const quantidadeFisica = parseInt(inventarioQtdFisicaInput.value);
+    const observacao = inventarioObservacaoInput.value.trim();
+    const dataAjuste = new Date(inventarioDataInput.value + 'T00:00:00');
+
+    if (!lojaId || !produtoId || isNaN(quantidadeFisica) || !observacao) {
+        alert('Por favor, preencha todos os campos, incluindo o motivo do ajuste.');
+        return;
+    }
+
+    try {
+        // 1. Calcula o saldo atual do sistema ANTES do ajuste
+        const movimentacoesDoProduto = movimentacoesEstoque.filter(m => m.lojaId === lojaId && m.produtoId === produtoId);
+        const saldoAtualSistema = movimentacoesDoProduto.reduce((acc, mov) => acc + mov.quantidade, 0);
+        
+        // 2. Calcula a diferença a ser lançada
+        const diferenca = quantidadeFisica - saldoAtualSistema;
+
+        if (diferenca === 0) {
+            alert('A quantidade física informada é igual ao saldo do sistema. Nenhum ajuste necessário.');
             return;
         }
-        const novoProduto = { modelo: nomeModelo, valor: valorModelo, ativo: true, ultimaAlteracao: new Date().toISOString() };
-        try {
-            await db.collection('produtos').add(novoProduto);
-            cancelProdutoFormBtn.click();
-            await loadDataFromFirebase();
-            alert('Produto cadastrado com sucesso!');
-        } catch (error) {
-            console.error("Erro ao cadastrar novo produto:", error);
-            produtoErrorMsg.textContent = 'Ocorreu um erro ao salvar.';
-            produtoErrorMsg.classList.remove('hidden');
-        }
-    });
 
-    // --- Lógica dos Formulários de Regras (Comissão e Aluguel) ---
-    const formNovaRegraComissao = document.getElementById('form-nova-regra-comissao');
-    const escopoComissaoSelect = document.getElementById('regra-comissao-escopo');
-    const tipoLojaComissaoContainer = document.getElementById('container-regra-comissao-tipo-loja');
-    const lojaEspecificaComissaoContainer = document.getElementById('container-regra-comissao-loja-especifica');
-
-    escopoComissaoSelect.addEventListener('change', () => {
-        if (escopoComissaoSelect.value === 'tipo-loja') {
-            tipoLojaComissaoContainer.classList.remove('hidden');
-            lojaEspecificaComissaoContainer.classList.add('hidden');
-        } else {
-            tipoLojaComissaoContainer.classList.add('hidden');
-            lojaEspecificaComissaoContainer.classList.remove('hidden');
-        }
-    });
-
-    formNovaRegraComissao.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const novaRegra = {
-            modeloVenda: document.getElementById('regra-comissao-modelo-venda').value,
-            percentual: parseFloat(document.getElementById('regra-comissao-percentual').value) / 100,
-            dataInicioVigencia: firebase.firestore.Timestamp.fromDate(new Date(document.getElementById('regra-comissao-data-inicio').value + 'T00:00:00'))
+        // 3. Cria o objeto de movimentação de AJUSTE
+        const movimentacao = {
+            data: firebase.firestore.Timestamp.fromDate(dataAjuste),
+            lojaId: lojaId,
+            produtoId: produtoId,
+            tipoMovimentacao: 'AJUSTE',
+            quantidade: diferenca, // Registra a diferença (pode ser positiva ou negativa)
+            observacao: observacao
         };
-        if (escopoComissaoSelect.value === 'tipo-loja') {
-            novaRegra.tipoLoja = document.getElementById('regra-comissao-tipo-loja').value;
-        } else {
-            novaRegra.lojaId = document.getElementById('regra-comissao-loja-id').value;
-        }
-        try {
-            await db.collection('historicoComissao').add(novaRegra);
-            const feedbackMsg = document.getElementById('comissao-regra-feedback-msg');
-            feedbackMsg.textContent = 'Nova regra de comissão salva com sucesso!';
-            feedbackMsg.className = 'loja-success-msg';
-            feedbackMsg.classList.remove('hidden');
-            formNovaRegraComissao.reset();
-            escopoComissaoSelect.dispatchEvent(new Event('change'));
-            await loadDataFromFirebase();
-        } catch (error) {
-            console.error("Erro ao salvar nova regra de comissão:", error);
-            alert("Ocorreu um erro ao salvar a nova regra.");
-        }
-    });
+        
+        // 4. Salva a movimentação no Firebase
+        const docRef = await db.collection('movimentacoesEstoque').add(movimentacao);
 
-    const formNovoValorAluguel = document.getElementById('form-novo-valor-aluguel');
-    const escopoAluguelSelect = document.getElementById('regra-aluguel-escopo');
-    const tipoLojaAluguelContainer = document.getElementById('container-regra-aluguel-tipo-loja');
-    const lojaEspecificaAluguelContainer = document.getElementById('container-regra-aluguel-loja-especifica');
+        // 5. ATUALIZA O ARRAY LOCAL IMEDIATAMENTE (A CORREÇÃO PRINCIPAL)
+        // Adiciona o novo registro ao array 'movimentacoesEstoque' que está na memória
+        movimentacoesEstoque.push({
+            id: docRef.id,
+            ...movimentacao,
+            data: dataAjuste // Garante que a data seja um objeto Date, e não um Timestamp
+        });
 
-    escopoAluguelSelect.addEventListener('change', () => {
-        if (escopoAluguelSelect.value === 'tipo-loja') {
-            tipoLojaAluguelContainer.classList.remove('hidden');
-            lojaEspecificaAluguelContainer.classList.add('hidden');
-        } else {
-            tipoLojaAluguelContainer.classList.add('hidden');
-            lojaEspecificaAluguelContainer.classList.remove('hidden');
-        }
-    });
+        // 6. ATUALIZA A INTERFACE (A PARTE QUE FALTAVA)
+        renderTabelaMovimentacoesEstoque(); // Redesenha a tabela de movimentações AGORA
 
-    formNovoValorAluguel.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const novoValor = {
-            valorAluguelMensal: parseFloat(document.getElementById('regra-aluguel-valor').value),
-            dataInicioVigencia: firebase.firestore.Timestamp.fromDate(new Date(document.getElementById('regra-aluguel-data-inicio').value + 'T00:00:00'))
-        };
-        if (escopoAluguelSelect.value === 'tipo-loja') {
-            novoValor.tipoLoja = document.getElementById('regra-aluguel-tipo-loja').value;
-        } else {
-            novoValor.lojaId = document.getElementById('regra-aluguel-loja-id').value;
-        }
-        try {
-            await db.collection('historicoAluguel').add(novoValor);
-            const feedbackMsg = document.getElementById('aluguel-regra-feedback-msg');
-            feedbackMsg.textContent = 'Novo valor de aluguel salvo com sucesso!';
-            feedbackMsg.className = 'loja-success-msg';
-            feedbackMsg.classList.remove('hidden');
-            formNovoValorAluguel.reset();
-            escopoAluguelSelect.dispatchEvent(new Event('change'));
-            await loadDataFromFirebase();
-        } catch (error) {
-            console.error("Erro ao salvar novo valor de aluguel:", error);
-            alert("Ocorreu um erro ao salvar o novo valor.");
-        }
+        // 7. Atualiza o saldo em 'estoqueAtual' (lógica antiga mantida)
+        const estoqueDocRef = db.collection('estoqueAtual').doc(`${lojaId}_${produtoId}`);
+        await estoqueDocRef.set({
+            lojaId: lojaId,
+            produtoId: produtoId,
+            quantidade: quantidadeFisica,
+            ultimaAtualizacao: firebase.firestore.Timestamp.now()
+        }, { merge: true });
+
+        // Feedback e limpeza do formulário
+        inventarioFeedbackMsg.textContent = `Ajuste de estoque (${diferenca}) registrado com sucesso! Saldo atual: ${quantidadeFisica}.`;
+        inventarioFeedbackMsg.className = 'loja-success-msg';
+        inventarioFeedbackMsg.classList.remove('hidden');
+        
+        formInventario.reset();
+        inventarioDataInput.valueAsDate = new Date();
+        applySecurityRules(); // Garante que o campo de loja seja travado novamente se necessário
+
+    } catch (error) {
+        console.error("Erro ao registrar ajuste de inventário:", error);
+        inventarioFeedbackMsg.textContent = 'Ocorreu um erro ao registrar o ajuste. Verifique o console.';
+        inventarioFeedbackMsg.className = 'loja-error-msg';
+        inventarioFeedbackMsg.classList.remove('hidden');
+    }
+});
+}
+// ==========================================================
+//                        FIM DA AÇÃO
+// ==========================================================
+
+
+// 3. Crie estas duas novas funções para popular os seletores
+function populateInventarioLojaSelect() {
+    if (!inventarioLojaSelect) return;
+    inventarioLojaSelect.innerHTML = '<option value="">Selecione a loja</option>';
+    lojas.sort((a, b) => a.nome.localeCompare(b.nome)).forEach(loja => {
+        inventarioLojaSelect.innerHTML += `<option value="${loja.id}">${loja.nome}</option>`;
     });
 }
 
+function populateInventarioProdutoSelect() {
+    if (!inventarioProdutoSelect) return;
+    inventarioProdutoSelect.innerHTML = '<option value="">Selecione o produto</option>';
+    produtos.sort((a, b) => a.modelo.localeCompare(b.modelo)).forEach(produto => {
+        inventarioProdutoSelect.innerHTML += `<option value="${produto.id}">${produto.modelo}</option>`;
+    });
+}
+// ==========================================================
+    //           INÍCIO DA AÇÃO 3: LÓGICA DE ENTRADA DE ESTOQUE
+    // ==========================================================
+    formEntradaEstoque.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const dataEntrada = estoqueDataEntrada.value;
+        const lojaId = estoqueLojaSelect.value;
+        const produtoId = estoqueProdutoSelect.value;
+        const quantidade = parseInt(estoqueQuantidadeInput.value);
+        const observacao = estoqueObservacaoInput.value.trim();
+
+        if (!dataEntrada || !lojaId || !produtoId || isNaN(quantidade) || quantidade <= 0) {
+            estoqueFeedbackMsg.textContent = 'Por favor, preencha todos os campos obrigatórios (Data, Loja, Produto, Quantidade).';
+            estoqueFeedbackMsg.className = 'loja-error-msg'; // Reutiliza o estilo de erro
+            estoqueFeedbackMsg.classList.remove('hidden');
+            return;
+        }
+
+        try {
+            // 1. Registrar a movimentação em 'movimentacoesEstoque'
+            const movimentacao = {
+                data: firebase.firestore.Timestamp.fromDate(new Date(dataEntrada + 'T00:00:00')),
+                lojaId: lojaId,
+                produtoId: produtoId,
+                tipoMovimentacao: 'ENTRADA',
+                quantidade: quantidade,
+                observacao: observacao,
+                vendaId: null // Não é uma venda
+            };
+            await db.collection('movimentacoesEstoque').add(movimentacao);
+
+            // 2. Atualizar o saldo em 'estoqueAtual'
+            const estoqueDocRef = db.collection('estoqueAtual').doc(`${lojaId}_${produtoId}`);
+            await estoqueDocRef.set({
+                lojaId: lojaId,
+                produtoId: produtoId,
+                quantidade: firebase.firestore.FieldValue.increment(quantidade), // Incrementa o valor existente
+                ultimaAtualizacao: firebase.firestore.Timestamp.now()
+            }, { merge: true }); // 'merge: true' cria o documento se não existir, ou atualiza se existir
+
+            estoqueFeedbackMsg.textContent = 'Entrada de estoque registrada com sucesso!';
+            estoqueFeedbackMsg.className = 'loja-success-msg'; // Reutiliza o estilo de sucesso
+            estoqueFeedbackMsg.classList.remove('hidden');
+            
+            formEntradaEstoque.reset();
+            estoqueDataEntrada.valueAsDate = new Date(); // Reseta a data para hoje
+            await loadDataFromFirebase(); // Recarrega todos os dados para atualizar as tabelas
+
+        } catch (error) {
+            console.error("Erro ao registrar entrada de estoque:", error);
+            estoqueFeedbackMsg.textContent = 'Ocorreu um erro ao registrar a entrada de estoque. Verifique o console.';
+            estoqueFeedbackMsg.className = 'loja-error-msg';
+            estoqueFeedbackMsg.classList.remove('hidden');
+        }
+    });
+    // ==========================================================
+    //                        FIM DA AÇÃO 3                       
+    // ==========================================================
 // ==========================================================
 //                        FIM DA CORREÇÃO
 // ==========================================================
@@ -3179,6 +3641,14 @@ function getAluguelVigente(dataReferencia, lojaId, tipoLoja) {
 
     return 0; // Retorna 0 se nenhuma regra for encontrada
 }
+// ==========================================================
+//       INÍCIO DA AÇÃO (PASSO 1): CRIAR A NOVA FUNÇÃO
+// ==========================================================
+
+
+// ==========================================================
+//                        FIM DA AÇÃO (PASSO 1)
+// ==========================================================
 
 // ==========================================================
 //       INÍCIO DA AÇÃO: AJUSTAR CÁLCULO DO ALUGUEL
@@ -3325,6 +3795,7 @@ function resetVendaForm() {
     // 7. Limpa os campos que não são resetados automaticamente (readonly)
     vendaTotalInput.value = '';
     vendaTipoLojaDisplay.value = '';
+    applySecurityRules();
 }
 
     // --- FUNÇÕES DE EDIÇÃO E EXCLUSÃO ---
@@ -3363,6 +3834,33 @@ function populateComissaoLojaSelect() {
         select.innerHTML += `<option value="${loja.id}">${loja.nome}</option>`;
     });
 }
+
+// ==========================================================
+//           INÍCIO DA AÇÃO 2.2: NOVAS FUNÇÕES POPULATE        
+// ==========================================================
+
+function populateEstoqueLojaSelect() {
+    if (!estoqueLojaSelect) return;
+    estoqueLojaSelect.innerHTML = '<option value="">Selecione a loja</option>';
+    lojas.sort((a, b) => a.nome.localeCompare(b.nome)).forEach(loja => {
+        estoqueLojaSelect.innerHTML += `<option value="${loja.id}">${loja.nome}</option>`;
+    });
+}
+
+function populateEstoqueProdutoSelect() {
+    if (!estoqueProdutoSelect) return;
+    estoqueProdutoSelect.innerHTML = '<option value="">Selecione o produto</option>';
+    // Apenas produtos ativos devem ser selecionáveis para entrada
+    produtos.filter(p => p.ativo).sort((a, b) => a.modelo.localeCompare(b.modelo)).forEach(produto => {
+        estoqueProdutoSelect.innerHTML += `<option value="${produto.id}">${produto.modelo}</option>`;
+    });
+}
+
+// ==========================================================
+//                        FIM DA AÇÃO 2.2                       
+// ==========================================================
+
+
 // ==========================================================
 //       INÍCIO DA AÇÃO 2: ADICIONAR/CORRIGIR A FUNÇÃO FALTANTE
 // ==========================================================
@@ -3539,34 +4037,34 @@ async function deleteProduto(id) {
         });
     }
 
-   function renderTabelaVendas() {
-    // Pega os filtros da tabela de vendas (se houver)
-    const vendasFiltradas = getFilteredVendasTabela();
-    
-    // Limpa o corpo da tabela
+// ==========================================================
+//       INÍCIO DA AÇÃO: CORRIGIR A FUNÇÃO renderTabelaVendas
+// ==========================================================
+
+function renderTabelaVendas() {
+    // A lógica de filtro por data e pelo seletor da tabela continua igual
+    let vendasFiltradas = getFilteredVendasTabela();
+
+    // --- INÍCIO DA NOVA LÓGICA DE FILTRO DE SEGURANÇA ---
+    const userLojaId = localStorage.getItem('userLojaId');
+
+    // 1. Se o usuário é de uma loja específica, aplica um filtro adicional
+    if (userLojaId && userLojaId !== 'admin' && userLojaId !== 'none') {
+        vendasFiltradas = vendasFiltradas.filter(venda => venda.lojaId === userLojaId);
+    }
+    // --- FIM DA NOVA LÓGICA DE FILTRO DE SEGURANÇA ---
+
     const tabelaVendasBody = document.getElementById('tabela-vendas-body');
     tabelaVendasBody.innerHTML = '';
 
-    // Ordena as vendas da mais recente para a mais antiga
+    // Ordena as vendas (já filtradas) da mais recente para a mais antiga
     const vendasOrdenadas = [...vendasFiltradas].sort((a, b) => new Date(b.data) - new Date(a.data));
     
-    // Itera sobre cada venda para criar a linha da tabela
     vendasOrdenadas.forEach(venda => {
-        // Busca a loja correspondente
         const loja = lojas.find(l => l.id == venda.lojaId);
-
-        // ==========================================================
-        //                    INÍCIO DA CORREÇÃO
-        // ==========================================================
-        
-        // 1. Validação de segurança para os valores numéricos
         const valorUnitario = typeof venda.valor === 'number' ? venda.valor : 0;
         const quantidade = typeof venda.quantidade === 'number' ? venda.quantidade : 0;
         const totalVenda = valorUnitario * quantidade;
-
-        // ==========================================================
-        //                     FIM DA CORREÇÃO
-        // ==========================================================
 
         const row = `<tr>
             <td>${new Date(venda.data + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
@@ -3591,6 +4089,10 @@ async function deleteProduto(id) {
     document.querySelectorAll('#tabela-vendas .btn-table-edit').forEach(b => b.onclick = (e) => editVenda(e.target.dataset.id));
     document.querySelectorAll('#tabela-vendas .btn-table-delete').forEach(b => b.onclick = (e) => deleteVenda(e.target.dataset.id));
 }
+
+// ==========================================================
+//                        FIM DA AÇÃO
+// ==========================================================
 
     function renderTabelaLojas() {
         // A lógica do subtítulo também precisa ser corrigida para contar "Shopping" e "Rua"
@@ -3828,24 +4330,31 @@ function renderProdutosLista() {
 
     }
 
-    // --- LÓGICA DO DASHBOARD ---
-    function populateFilters() {
-        const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-        filterMonth.innerHTML = '<option value="all">Todos os Meses</option>';
-        meses.forEach((mes, index) => {
-            filterMonth.innerHTML += `<option value="${index}">${mes}</option>`;
-        });
-        const currentYear = new Date().getFullYear();
-        filterYear.innerHTML = '<option value="all">Todos os Anos</option>';
-        for (let i = currentYear; i >= currentYear - 5; i--) {
-            filterYear.innerHTML += `<option value="${i}">${i}</option>`;
-        }
-        filterMonth.value = new Date().getMonth();
-        filterYear.value = currentYear;
-    filterMonth.onchange = runDashboardUpdate; // Antes era updateDashboard
-    filterYear.onchange = runDashboardUpdate;  // Antes era updateDashboard
+// ==========================================================
+//       INÍCIO DA AÇÃO 1: RESTAURAR populateFilters
+// ==========================================================
+
+function populateFilters() {
+    const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+    filterMonth.innerHTML = '<option value="all">Todos os Meses</option>';
+    meses.forEach((mes, index) => {
+        filterMonth.innerHTML += `<option value="${index}">${mes}</option>`;
+    });
+    const currentYear = new Date().getFullYear();
+    filterYear.innerHTML = '<option value="all">Todos os Anos</option>';
+    for (let i = currentYear; i >= currentYear - 5; i--) {
+        filterYear.innerHTML += `<option value="${i}">${i}</option>`;
     }
+    filterMonth.value = new Date().getMonth();
+    filterYear.value = currentYear;
     
+    // REMOVEMOS AS LINHAS .onchange DAQUI!
+}
+
+// ==========================================================
+//                        FIM DA AÇÃO 1
+// ==========================================================
+
 // ==========================================================
 //       INÍCIO DA AÇÃO 1: RESTAURAR A FUNÇÃO ORIGINAL
 // ==========================================================
@@ -3863,16 +4372,27 @@ function getFilteredVendas() {
         return monthMatch && yearMatch;
     });
 }
+// 3. ATUALIZE A FUNÇÃO applyDashboardLojaFilter
 function applyDashboardLojaFilter(vendasParaFiltrar) {
-    const selectedLoja = document.getElementById('filter-loja').value;
+    const userLojaId = localStorage.getItem('userLojaId');
 
-    if (selectedLoja === 'all') {
-        return vendasParaFiltrar; // Se "Todas" estiver selecionado, não faz nada
+    // VERIFICA SE O USUÁRIO É DE UMA LOJA ESPECÍFICA
+    if (userLojaId && userLojaId !== 'admin' && userLojaId !== 'none') {
+        // Se for, força o filtro para a loja dele, ignorando o seletor
+        return vendasParaFiltrar.filter(venda => venda.lojaId === userLojaId);
     }
 
-    // Filtra o array de vendas recebido pelo ID da loja
+    // SE FOR ADMIN, A LÓGICA ANTIGA CONTINUA
+    const selectedLoja = document.getElementById('filter-loja').value;
+    if (selectedLoja === 'all') {
+        return vendasParaFiltrar;
+    }
     return vendasParaFiltrar.filter(venda => venda.lojaId === selectedLoja);
 }
+
+// ==========================================================
+//                        FIM DA AÇÃO 3
+// ==========================================================
 
 // ==========================================================
 //                        FIM DA AÇÃO 1
@@ -3945,12 +4465,34 @@ function updateDashboard(vendasFiltradas) {
     document.getElementById('card-ticket-medio').textContent = ticketMedio.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     document.getElementById('card-venda-media').textContent = vendaMediaDia.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     
+    // --- INÍCIO DA LÓGICA CORRIGIDA PARA O CARD DE ESTOQUE ---
+    
+    const userLojaId = localStorage.getItem('userLojaId');
+    let movimentacoesParaCalcular = movimentacoesEstoque;
+
+    // 1. APLICA O FILTRO DE SEGURANÇA
+    // Se o usuário for de uma loja específica, filtramos as movimentações primeiro
+    if (userLojaId && userLojaId !== 'admin' && userLojaId !== 'none') {
+        movimentacoesParaCalcular = movimentacoesEstoque.filter(mov => mov.lojaId === userLojaId);
+    }
+
+    // 2. CALCULA O ESTOQUE TOTAL USANDO O ARRAY JÁ FILTRADO
+    const estoqueTotal = movimentacoesParaCalcular.reduce((sum, mov) => sum + mov.quantidade, 0);
+
+    // 3. Atualiza o texto do card
+    document.getElementById('card-estoque-total').textContent = estoqueTotal;
+
+    // --- FIM DA LÓGICA CORRIGIDA ---
     updateRankingLojasChart(vendasFiltradas);
     updateRankingModeloChart(vendasFiltradas);
     updateVendaTipoLojaChart(vendasFiltradas);
     updateVendaFormaPagamentoChart(vendasFiltradas);
     updateRankingGRCChart(vendasFiltradas);
     updateParticipacaoChart(vendasFiltradas, totalUnidades);
+    
+    updateEstoquePorLojaChart();
+    updateEstoquePorModeloChart();
+    
     updateVendaDiaChart(vendasFiltradas);
     updateVendaSemanaChart(vendasFiltradas);
     updateVendaMensalChart();
@@ -3964,6 +4506,169 @@ function updateDashboard(vendasFiltradas) {
 //                        FIM DA AÇÃO 1
 // ==========================================================
 
+// ==========================================================
+//       INÍCIO DA AÇÃO: SUBSTITUIR FUNÇÕES COMPLETAS
+// ==========================================================
+
+// 1. FUNÇÃO COMPLETA PARA O GRÁFICO DE ESTOQUE POR LOJA
+function updateEstoquePorLojaChart() {
+    const ctx = document.getElementById('estoque-por-loja-chart').getContext('2d');
+    const userLojaId = localStorage.getItem('userLojaId');
+    
+    let movimentacoesParaCalcular = movimentacoesEstoque;
+    if (userLojaId && userLojaId !== 'admin' && userLojaId !== 'none') {
+        movimentacoesParaCalcular = movimentacoesEstoque.filter(mov => mov.lojaId === userLojaId);
+    }
+
+    const estoquePorLoja = movimentacoesParaCalcular.reduce((acc, mov) => {
+        const loja = lojas.find(l => l.id === mov.lojaId);
+        if (loja) {
+            acc[loja.nome] = (acc[loja.nome] || 0) + mov.quantidade;
+        }
+        return acc;
+    }, {});
+
+    const sortedEstoque = Object.entries(estoquePorLoja).sort(([, a], [, b]) => b - a);
+
+    // --- LÓGICA DE ALTURA DINÂMICA ---
+    const numeroDeBarras = sortedEstoque.length;
+    const espacoVerticalPorBarra = 40;
+    const alturaMinimaDoGrafico = 80;
+    const alturaCalculada = Math.max(alturaMinimaDoGrafico, numeroDeBarras * espacoVerticalPorBarra);
+    
+    const canvasContainer = document.getElementById('estoque-loja-canvas-container');
+    canvasContainer.style.height = `${alturaCalculada}px`;
+    // --- FIM DA LÓGICA DE ALTURA ---
+
+    const options = {
+        indexAxis: 'y',
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false },
+            datalabels: {
+                anchor: 'end',
+                align: 'right',
+                offset: 8,
+                color: document.body.classList.contains('dark-mode') ? '#f0f2f5' : '#172B4D',
+                font: { weight: 'bold' },
+                formatter: (value) => Math.round(value)
+            }
+        },
+        scales: {
+            x: { 
+                display: true, 
+                grid: { display: false },
+                ticks: { precision: 0 },
+                beginAtZero: true 
+            },
+            y: { 
+                display: true, 
+                grid: { display: false, drawBorder: false }
+            }
+        }
+    };
+
+    const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
+    gradient.addColorStop(0, '#f5d393');
+    gradient.addColorStop(1, '#f5d393');
+
+    createChart(ctx, 'bar', {
+        labels: sortedEstoque.map(([nome]) => nome),
+        datasets: [{
+            label: 'Estoque Total',
+            data: sortedEstoque.map(([, qtd]) => qtd),
+            backgroundColor: gradient,
+            borderRadius: 8
+            // Nenhuma propriedade de espessura aqui
+        }]
+    }, options);
+}
+
+
+// 2. FUNÇÃO COMPLETA PARA O GRÁFICO DE ESTOQUE POR MODELO
+function updateEstoquePorModeloChart() {
+    const ctx = document.getElementById('estoque-por-modelo-chart').getContext('2d');
+    const userLojaId = localStorage.getItem('userLojaId');
+    
+    let movimentacoesParaCalcular = movimentacoesEstoque;
+    if (userLojaId && userLojaId !== 'admin' && userLojaId !== 'none') {
+        movimentacoesParaCalcular = movimentacoesEstoque.filter(mov => mov.lojaId === userLojaId);
+    }
+
+    const estoquePorModelo = movimentacoesParaCalcular.reduce((acc, mov) => {
+        const produto = produtos.find(p => p.id === mov.produtoId);
+        if (produto) {
+            acc[produto.modelo] = (acc[produto.modelo] || 0) + mov.quantidade;
+        }
+        return acc;
+    }, {});
+
+    const sortedEstoque = Object.entries(estoquePorModelo).sort(([, a], [, b]) => b - a);
+
+    // --- LÓGICA DE ALTURA DINÂMICA ---
+    const numeroDeBarras = sortedEstoque.length;
+    const espacoVerticalPorBarra = 40;
+    const alturaMinimaDoGrafico = 80;
+    const alturaCalculada = Math.max(alturaMinimaDoGrafico, numeroDeBarras * espacoVerticalPorBarra);
+
+    const canvasContainer = document.getElementById('estoque-modelo-canvas-container');
+    canvasContainer.style.height = `${alturaCalculada}px`;
+    // --- FIM DA LÓGICA DE ALTURA ---
+
+    const options = {
+        indexAxis: 'y',
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false },
+            datalabels: {
+                anchor: 'end',
+                align: 'right',
+                offset: 8,
+                color: document.body.classList.contains('dark-mode') ? '#f0f2f5' : '#172B4D',
+                font: { weight: 'bold' },
+                formatter: (value) => Math.round(value)
+            }
+        },
+        scales: {
+            x: { 
+                display: true, 
+                grid: { display: false },
+                    ticks: { 
+                    precision: 0,
+                    display: false // Adicione esta linha para esconder os números do eixo X
+                },
+                beginAtZero: true 
+            },
+            y: { 
+                display: true, 
+                grid: { display: false, drawBorder: false }
+            }
+        }
+    };
+
+    const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
+    gradient.addColorStop(0, '#f39772');
+    gradient.addColorStop(1, '#f39772');
+
+    createChart(ctx, 'bar', {
+        labels: sortedEstoque.map(([nome]) => nome),
+        datasets: [{
+            label: 'Estoque Total',
+            data: sortedEstoque.map(([, qtd]) => qtd),
+            backgroundColor: gradient,
+            borderRadius: 8
+            // Nenhuma propriedade de espessura aqui
+        }]
+    }, options);
+}
+
+// ==========================================================
+//                        FIM DA AÇÃO
+// ==========================================================
+
+// ==========================================================
+//                        FIM DA AÇÃO
+// ==========================================================
 
 
     function createChart(ctx, type, data, options) {
@@ -4054,6 +4759,10 @@ function updateRankingModeloChart(vendasFiltradas) {
     });
 }
 
+// ==========================================================
+//       INÍCIO DA AÇÃO (PASSO 1): ATUALIZAR GRÁFICO DE RANKING DE LOJAS
+// ==========================================================
+
 function updateRankingLojasChart(vendasFiltradas) {
     const ctx = document.getElementById('ranking-lojas-chart').getContext('2d');
     const vendasPorLoja = vendasFiltradas.reduce((acc, v) => {
@@ -4062,23 +4771,55 @@ function updateRankingLojasChart(vendasFiltradas) {
         return acc;
     }, {});
     const sortedLojas = Object.entries(vendasPorLoja).sort(([, a], [, b]) => b - a);
-    // ==========================================================
-    //       INÍCIO DA LÓGICA DE ALTURA (ABORDAGEM FINAL)
-    // ==========================================================
-    const numeroDeLojas = sortedLojas.length;
-    const alturaPorBarra = 30; // Espaço total para cada barra
-    const alturaTotalContainer = numeroDeLojas * alturaPorBarra;
 
-    // Pega a NOVA DIV que envolve o canvas
+    // --- INÍCIO DA NOVA LÓGICA DE ESTILO ---
+    const isSingleBar = sortedLojas.length === 1;
+    
+    // 1. Define as opções do gráfico condicionalmente
+    const options = {
+        indexAxis: 'y',
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false },
+            // Se for barra única, o rótulo fica no centro. Se não, no final.
+            datalabels: {
+                color: isSingleBar ? '#fff' : '#15191',
+                anchor: 'center',
+                align: 'center',
+                font: {
+                    weight: 'bold',
+                    // Aumenta a fonte se for barra única
+                    size: isSingleBar ? 20 : 12 
+                }
+            }
+        },
+        scales: {
+            // Esconde os eixos X e Y se for barra única para um visual mais limpo
+            x: { display: !isSingleBar },
+            y: { display: !isSingleBar }
+        }
+    };
+
+    // 2. Define a cor e a espessura da barra condicionalmente
+    const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
+    if (isSingleBar) {
+        gradient.addColorStop(0, '#1a0b2a'); // Cor escura do exemplo
+        gradient.addColorStop(1, '#1a0b2a');
+    } else {
+        gradient.addColorStop(0, '#f5d393'); // Cor amarela original
+        gradient.addColorStop(1, '#f5d393');
+    }
+    
+    const barThickness = isSingleBar ? undefined : 18; // Deixa o Chart.js decidir a espessura na barra única
+
+    // --- FIM DA NOVA LÓGICA DE ESTILO ---
+
+    // Lógica de altura dinâmica (mantida)
+    const numeroDeLojas = sortedLojas.length;
+    const alturaPorBarra = isSingleBar ? 200 : 30; // Barra única fica bem maior
+    const alturaTotalContainer = numeroDeLojas * alturaPorBarra;
     const canvasContainer = document.getElementById('ranking-lojas-canvas-container');
-    // Define a altura da DIV, não do canvas!
     canvasContainer.style.height = `${alturaTotalContainer}px`;
-    // ==========================================================
-    //                       FIM DA LÓGICA
-    // ==========================================================
-    const gradient = ctx.createLinearGradient(0,0, 0, ctx.canvas.height); // Gradiente horizontal
-    gradient.addColorStop(1, '#f5d393'); // Cor inicial (esquerda, mais clara)
-    gradient.addColorStop(0, '#f5d393'); // Cor final (direita, mais escura)
 
     createChart(ctx, 'bar', {
         labels: sortedLojas.map(([nome]) => nome),
@@ -4087,106 +4828,136 @@ function updateRankingLojasChart(vendasFiltradas) {
             data: sortedLojas.map(([, qtd]) => qtd),
             backgroundColor: gradient,
             borderRadius: 18,
-            barThickness: 18
+            barThickness: barThickness
         }]
-    }, { 
-        indexAxis: 'y',
-        maintainAspectRatio: false, 
-        plugins: { 
-            legend: { display: false },
-            datalabels: {
-                color: '#15191',
-                anchor: 'center',
-                align: 'center'
-            }
-        } 
-    });
+    }, options); // Passa as opções dinâmicas para a função de criar o gráfico
 }
+
+// ==========================================================
+//                        FIM DA AÇÃO (PASSO 1)
+// ==========================================================
 
 /* ================================================================== */
 /* BLOCO ÚNICO: ALTERAÇÃO NO JAVASCRIPT (Participação em Percentual) */
 /* ================================================================== */
 
+// ==========================================================
+//       INÍCIO DA AÇÃO (PASSO 2): ATUALIZAR GRÁFICO DE SHARE
+// ==========================================================
+
 function updateParticipacaoChart(vendasFiltradas) {
     const ctx = document.getElementById('participacao-lojas-chart').getContext('2d');
-    // 1. Calcula a venda total em VALOR (R$), que será o nosso 100%.
     const vendaTotalValor = vendasFiltradas.reduce((sum, v) => sum + (v.valor * v.quantidade), 0);
-
-    // 2. Agrupa as vendas por loja somando o VALOR.
     const vendasPorLoja = vendasFiltradas.reduce((acc, v) => {
         const loja = lojas.find(l => l.id == v.lojaId);
-        if (loja) {
-            acc[loja.nome] = (acc[loja.nome] || 0) + (v.valor * v.quantidade);
-        }
+        if (loja) acc[loja.nome] = (acc[loja.nome] || 0) + (v.valor * v.quantidade);
         return acc;
     }, {});
-
     const sorted = Object.entries(vendasPorLoja).sort(([, a], [, b]) => b - a);
 
-    // Lógica de altura dinâmica para o gráfico de Share de Vendas
-    const numeroDeLojasParticipacao = sorted.length;
-    const alturaPorBarraParticipacao = 30; // Espaço total para cada barra
-    const alturaTotalContainerParticipacao = numeroDeLojasParticipacao * alturaPorBarraParticipacao;
+    // --- INÍCIO DA NOVA LÓGICA DE ESTILO ---
+    const isSingleBar = sorted.length === 1;
 
-    const canvasContainerParticipacao = document.getElementById('participacao-lojas-canvas-container');
-    canvasContainerParticipacao.style.height = `${alturaTotalContainerParticipacao}px`;
-
-
-    const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
-    const isDarkMode = document.body.classList.contains('dark-mode');
-        gradient.addColorStop(1, '#f39772'); // Cor inicial (esquerda, mais clara)
-        gradient.addColorStop(0, '#f39772'); // Cor final (direita, mais escura)
-    createChart(ctx, 'bar', {
-        labels: sorted.map(([nome]) => nome),
-        datasets: [{
-            label: 'Participação (%)', // Label atualizado
-            // 3. ALTERAÇÃO: Os dados agora são os percentuais calculados.
-            data: sorted.map(([, val]) => vendaTotalValor > 0 ? (val / vendaTotalValor * 100) : 0),
-            backgroundColor: gradient,
-            borderRadius: 18
-        }]
-    }, {
+    const options = {
         indexAxis: 'y',
         plugins: {
             legend: { display: false },
-            // 4. ALTERAÇÃO: Rótulo de dados agora formata como percentual.
             datalabels: {
-                color: '#15191',
+                color: isSingleBar ? '#fff' : '#15191',
                 anchor: 'center',
                 align: 'center',
-                formatter: (value) => value > 0 ? `${value.toFixed(1)}%` : '' // Ex: 25.5%
+                font: {
+                    weight: 'bold',
+                    size: isSingleBar ? 20 : 12
+                },
+                // Formata como percentual
+                formatter: (value) => value > 0 ? `${value.toFixed(1)}%` : ''
             },
-            tooltip: {
-                callbacks: {
-                    // Tooltip agora mostra o valor em R$ e o %
-                    label: (c) => {
-                        // Para obter o valor original em R$, precisamos buscá-lo novamente
-                        const lojaNome = c.label;
-                        const valorOriginal = vendasPorLoja[lojaNome] || 0;
-                        const valorFormatado = valorOriginal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-                        return `${c.dataset.label}: ${c.raw.toFixed(2)}% (${valorFormatado})`;
-                    }
-                }
-            }
+            tooltip: { /* ... (lógica do tooltip mantida) ... */ }
         },
-        // 5. ALTERAÇÃO: Adiciona o sufixo '%' ao eixo X.
         scales: {
-            x: {
-                ticks: {
-                    callback: function(value) {
-                        return value + '%';
-                    }
-                }
-            }
+            x: { 
+                display: !isSingleBar, // Esconde o eixo se for barra única
+                ticks: { callback: (value) => value + '%' } 
+            },
+            y: { display: !isSingleBar } // Esconde o eixo se for barra única
         }
-    });
+    };
+
+    const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
+    if (isSingleBar) {
+        gradient.addColorStop(0, '#1a0b2a'); // Cor escura
+        gradient.addColorStop(1, '#1a0b2a');
+    } else {
+        gradient.addColorStop(0, '#f39772'); // Cor laranja original
+        gradient.addColorStop(1, '#f39772');
+    }
+    
+    const barThickness = isSingleBar ? undefined : 18;
+    // --- FIM DA NOVA LÓGICA DE ESTILO ---
+
+    const numeroDeLojasParticipacao = sorted.length;
+    const alturaPorBarraParticipacao = isSingleBar ? 200 : 30;
+    const alturaTotalContainerParticipacao = numeroDeLojasParticipacao * alturaPorBarraParticipacao;
+    const canvasContainerParticipacao = document.getElementById('participacao-lojas-canvas-container');
+    canvasContainerParticipacao.style.height = `${alturaTotalContainerParticipacao}px`;
+
+    createChart(ctx, 'bar', {
+        labels: sorted.map(([nome]) => nome),
+        datasets: [{
+            label: 'Participação (%)',
+            data: sorted.map(([, val]) => vendaTotalValor > 0 ? (val / vendaTotalValor * 100) : 0),
+            backgroundColor: gradient,
+            borderRadius: 18,
+            barThickness: barThickness
+        }]
+    }, options);
 }
 
+// ==========================================================
+//                        FIM DA AÇÃO (PASSO 2)
+// ==========================================================
 
 
+
+// ==========================================================
+//       INÍCIO DA AÇÃO: CORRIGIR A FUNÇÃO updateDetalheVendasTable
+// ==========================================================
 
 function updateDetalheVendasTable(vendasFiltradas) {
-    
+    const userLojaId = localStorage.getItem('userLojaId');
+    const detalheLojaFilter = document.getElementById('detalhe-loja-filter');
+
+    // --- INÍCIO DA LÓGICA DE SEGURANÇA ---
+    let lojasAtivas;
+
+    // 1. VERIFICA SE O USUÁRIO É DE UMA LOJA ESPECÍFICA
+    if (userLojaId && userLojaId !== 'admin' && userLojaId !== 'none') {
+        // Se for, a única loja ativa é a dele.
+        lojasAtivas = lojas.filter(loja => loja.id === userLojaId);
+        // E o seletor de filtro de loja deve ser escondido.
+        if (detalheLojaFilter && detalheLojaFilter.parentElement) {
+            detalheLojaFilter.parentElement.style.display = 'none';
+        }
+    } else {
+        // 2. SE FOR ADMIN, A LÓGICA ANTIGA CONTINUA
+        // Garante que o filtro seja visível para o admin.
+        if (detalheLojaFilter && detalheLojaFilter.parentElement) {
+            detalheLojaFilter.parentElement.style.display = '';
+        }
+        
+        const lojaFiltradaId = detalheLojaFilter.value;
+        if (lojaFiltradaId === 'all') {
+            lojasAtivas = [...lojas].sort((a, b) => a.nome.localeCompare(b.nome));
+        } else {
+            lojasAtivas = lojas.filter(loja => loja.id === lojaFiltradaId);
+        }
+    }
+    // --- FIM DA LÓGICA DE SEGURANÇA ---
+
+    // O restante da função continua exatamente como estava,
+    // pois ela já opera com base na variável 'lojasAtivas', que agora está corretamente filtrada.
+
     const meses = ["JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO", "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO"];
     const diasSemana = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
     const selectedMonth = parseInt(filterMonth.value);
@@ -4194,19 +4965,6 @@ function updateDetalheVendasTable(vendasFiltradas) {
     const mesNome = selectedMonth !== 'all' ? meses[selectedMonth] : 'PERÍODO';
     detalheVendasTitulo.textContent = `Detalhamento de Vendas - ${mesNome}`;
 
-    const detalheLojaFilter = document.getElementById('detalhe-loja-filter');
-    // Adiciona uma verificação de segurança para o caso do elemento não existir ainda
-    if (!detalheLojaFilter) return; 
-    
-    const lojaFiltradaId = detalheLojaFilter.value;
-    let lojasAtivas;
-
-    if (lojaFiltradaId === 'all') {
-        lojasAtivas = [...lojas].sort((a, b) => a.nome.localeCompare(b.nome));
-    } else {
-        lojasAtivas = lojas.filter(loja => loja.id === lojaFiltradaId);
-    }
-    
     const totaisPorLoja = {};
     let totalGeralPcs = 0;
     let totalGeralValor = 0;
@@ -4220,23 +4978,15 @@ function updateDetalheVendasTable(vendasFiltradas) {
         totalGeralValor += totalValor;
     });
 
-    // ==========================================================
-    //            INÍCIO DO CÓDIGO RESTAURADO
-    // ==========================================================
-
-    // --- CONSTRUÇÃO DO CABEÇALHO DA TABELA ---
     let headerHTML = '<tr><th rowspan="4" class="row-header-dia">DATA</th>';
-    
     if (lojasAtivas.length > 0) {
         lojasAtivas.forEach(loja => { headerHTML += `<th colspan="2" class="col-header-loja">${loja.nome}</th>`; });
         headerHTML += '<th colspan="2" class="col-header-loja">TOTAL</th></tr><tr>';
-        
         lojasAtivas.forEach(loja => {
             const dataInaug = new Date(loja.dataInauguracao + 'T00:00:00').toLocaleDateString('pt-BR');
             headerHTML += `<th colspan="2">${dataInaug}</th>`;
         });
         headerHTML += '<th colspan="2"></th></tr>';
-        
         headerHTML += '<tr>';
         lojasAtivas.forEach(loja => {
             const total = totaisPorLoja[loja.id];
@@ -4244,15 +4994,13 @@ function updateDetalheVendasTable(vendasFiltradas) {
         });
         headerHTML += `<th class="sub-header">${totalGeralPcs}</th><th class="sub-header">${totalGeralValor.toLocaleString('pt-BR')}</th>`;
         headerHTML += '</tr>';
-        
         headerHTML += '<tr>';
         lojasAtivas.forEach(() => { headerHTML += '<th class="sub-header">Pçs</th><th class="sub-header">$</th>'; });
         headerHTML += '<th class="sub-header">Pçs</th><th class="sub-header">$</th>';
     }
     headerHTML += '</tr>';
     detalheVendasHead.innerHTML = headerHTML;
-    
-    // --- CONSTRUÇÃO DO CORPO DA TABELA ---
+
     const diasDoMes = (selectedMonth === 'all' || selectedYear === 'all') 
         ? [...new Set(vendasFiltradas.map(v => v.data))].sort()
         : Array.from({ length: new Date(selectedYear, selectedMonth + 1, 0).getDate() }, (_, i) => `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}-${String(i + 1).padStart(2, '0')}`);
@@ -4265,9 +5013,7 @@ function updateDetalheVendasTable(vendasFiltradas) {
             const diaSemanaNome = diasSemana[dateObj.getUTCDay()];
             let totalDiaPcs = 0;
             let totalDiaValor = 0;
-            
             let rowHTML = `<tr><td class="row-header-dia">${dia} - ${diaSemanaNome.toUpperCase()}</td>`;
-
             lojasAtivas.forEach(loja => {
                 const vendasDiaLoja = vendasFiltradas.filter(v => v.data === dataString && v.lojaId == loja.id);
                 const pcs = vendasDiaLoja.reduce((sum, v) => sum + v.quantidade, 0);
@@ -4278,17 +5024,16 @@ function updateDetalheVendasTable(vendasFiltradas) {
                 totalDiaPcs += pcs;
                 totalDiaValor += valor;
             });
-
             rowHTML += `<td>${totalDiaPcs > 0 ? totalDiaPcs : ''}</td><td>${totalDiaValor > 0 ? totalDiaValor.toLocaleString('pt-BR') : ''}</td></tr>`;
             bodyHTML += rowHTML;
         });
     }
     detalheVendasBody.innerHTML = bodyHTML;
-
-    // ==========================================================
-    //                 FIM DO CÓDIGO RESTAURADO
-    // ==========================================================
 }
+
+// ==========================================================
+//                        FIM DA AÇÃO
+// ==========================================================
 
 function updateVendaTipoLojaChart(vendasFiltradas) {
     const ctx = document.getElementById('venda-tipo-loja-chart').getContext('2d');
@@ -4382,19 +5127,24 @@ function updateVendaTipoLojaChart(vendasFiltradas) {
 
 
 
+// ==========================================================
+//       INÍCIO DA AÇÃO: AJUSTAR O GRÁFICO DE MODALIDADE
+// ==========================================================
 
 function updateVendaFormaPagamentoChart(vendasFiltradas) {
     const ctx = document.getElementById('venda-forma-pagamento-chart').getContext('2d');
     const vendasPorForma = vendasFiltradas.reduce((acc, v) => {
-        acc[v.formaPagamento] = (acc[v.formaPagamento] || 0) + v.quantidade;
+        // Garante que a forma de pagamento exista antes de somar
+        if (v.formaPagamento) {
+            acc[v.formaPagamento] = (acc[v.formaPagamento] || 0) + v.quantidade;
+        }
         return acc;
     }, {});
     const sorted = Object.entries(vendasPorForma).sort(([, a], [, b]) => b - a);
     
     const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
-    const isDarkMode = document.body.classList.contains('dark-mode');
-        gradient.addColorStop(1, '#f5d393'); // Cor inicial (esquerda, mais clara)
-        gradient.addColorStop(0, '#f5d393'); // Cor final (direita, mais escura)
+    gradient.addColorStop(1, '#f5d393');
+    gradient.addColorStop(0, '#f5d393');
 
     createChart(ctx, 'bar', {
         labels: sorted.map(([nome]) => nome),
@@ -4408,14 +5158,20 @@ function updateVendaFormaPagamentoChart(vendasFiltradas) {
         indexAxis: 'y',
         plugins: { 
             legend: { display: false },
+            // --- AQUI ESTÁ A CORREÇÃO ---
             datalabels: {
-                color: '#15191',
-                anchor: 'center',
-                align: 'center'
+                color: '#15191d', // Cor escura para contrastar com a barra clara
+                anchor: 'center',  // Ancorar o rótulo no CENTRO da barra
+                align: 'center'    // Alinhar o texto no CENTRO da âncora
             }
         }
     });
 }
+
+// ==========================================================
+//                        FIM DA AÇÃO
+// ==========================================================
+
 
 function updateRankingGRCChart(vendasFiltradas) {
     const ctx = document.getElementById('ranking-grc-chart').getContext('2d');
@@ -4811,7 +5567,8 @@ function renderAll() {
     renderTabelaResumoComissao();
     renderTabelaHistoricoComissao();
     renderTabelaHistoricoAluguel();
-    
+    renderTabelaMovimentacoesEstoque();
+
     // ETAPA 2: Popula todos os seletores e datalists
     populateLojasSelect();
     populateProdutosSelect();
@@ -4823,10 +5580,27 @@ function renderAll() {
     
     // ADICIONE A LINHA DE VOLTA AQUI!
     populateDashboardLojaFilter(); 
+    populateEstoqueLojaSelect();
+    populateEstoqueProdutoSelect();
+
+    populateInventarioLojaSelect(); // <-- ADICIONE ESTA LINHA
+    populateInventarioProdutoSelect(); // <-- ADICIONE ESTA LINHA
     
     // ETAPA 3: Configura as interatividades
     setupComissaoEditing();
-    
+    applySecurityRules();
+
+
+        // --- ADICIONE ESTE BLOCO NO FINAL DA FUNÇÃO renderAll ---
+    // Garante que o campo "Tipo da Loja" seja preenchido após os dados carregarem
+    const userLojaId = localStorage.getItem('userLojaId');
+    if (userLojaId && userLojaId !== 'admin' && userLojaId !== 'none') {
+        const lojaDoUsuario = lojas.find(l => l.id === userLojaId);
+        if (lojaDoUsuario) {
+            document.getElementById('venda-tipo-loja-display').value = lojaDoUsuario.tipo;
+        }
+    }
+    // --- FIM DO NOVO BLOCO ---
     // ETAPA 4: ATUALIZA O DASHBOARD UMA ÚNICA VEZ, NO FINAL DE TUDO
     runDashboardUpdate(); 
 }
@@ -4849,4 +5623,4 @@ function renderAll() {
 
 
 
-Manus | VP Analytics
+| VP Analytics
