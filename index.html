@@ -2418,6 +2418,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const refreshDashboardBtn = document.getElementById('refresh-dashboard-btn');
 
+
+        // No início do seu DOMContentLoaded, junto com as outras constantes
+    const formNovaRegraComissao = document.getElementById('form-nova-regra-comissao');
+    const escopoComissaoSelect = document.getElementById('regra-comissao-escopo');
+    const tipoLojaComissaoContainer = document.getElementById('container-regra-comissao-tipo-loja');
+    const lojaEspecificaComissaoContainer = document.getElementById('container-regra-comissao-loja-especifica');
+
+    const formNovoValorAluguel = document.getElementById('form-novo-valor-aluguel');
+    const escopoAluguelSelect = document.getElementById('regra-aluguel-escopo');
+    const tipoLojaAluguelContainer = document.getElementById('container-regra-aluguel-tipo-loja');
+    const lojaEspecificaAluguelContainer = document.getElementById('container-regra-aluguel-loja-especifica');
+
         // 1. Adicione estas constantes no topo do seu script, junto com as outras
     const formInventario = document.getElementById('form-inventario');
     const inventarioDataInput = document.getElementById('inventario-data');
@@ -3508,6 +3520,101 @@ formInventario.addEventListener('submit', async (e) => {
         inventarioFeedbackMsg.classList.remove('hidden');
     }
 });
+
+
+// ==========================================================
+//       INÍCIO DA AÇÃO: ADICIONAR LÓGICA FALTANTE NA setupForms
+// ==========================================================
+
+// Cole este bloco inteiro no FINAL da sua função setupForms()
+
+    // --- Lógica dos Formulários de Regras (Comissão e Aluguel) ---
+    if (escopoComissaoSelect) {
+        escopoComissaoSelect.addEventListener('change', () => {
+            if (escopoComissaoSelect.value === 'tipo-loja') {
+                tipoLojaComissaoContainer.classList.remove('hidden');
+                lojaEspecificaComissaoContainer.classList.add('hidden');
+            } else {
+                tipoLojaComissaoContainer.classList.add('hidden');
+                lojaEspecificaComissaoContainer.classList.remove('hidden');
+            }
+        });
+    }
+
+    if (formNovaRegraComissao) {
+        formNovaRegraComissao.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const novaRegra = {
+                modeloVenda: document.getElementById('regra-comissao-modelo-venda').value,
+                percentual: parseFloat(document.getElementById('regra-comissao-percentual').value) / 100,
+                dataInicioVigencia: firebase.firestore.Timestamp.fromDate(new Date(document.getElementById('regra-comissao-data-inicio').value + 'T00:00:00'))
+            };
+            if (escopoComissaoSelect.value === 'tipo-loja') {
+                novaRegra.tipoLoja = document.getElementById('regra-comissao-tipo-loja').value;
+            } else {
+                novaRegra.lojaId = document.getElementById('regra-comissao-loja-id').value;
+            }
+            try {
+                await db.collection('historicoComissao').add(novaRegra);
+                const feedbackMsg = document.getElementById('comissao-regra-feedback-msg');
+                feedbackMsg.textContent = 'Nova regra de comissão salva com sucesso!';
+                feedbackMsg.className = 'loja-success-msg';
+                feedbackMsg.classList.remove('hidden');
+                formNovaRegraComissao.reset();
+                escopoComissaoSelect.dispatchEvent(new Event('change'));
+                await loadDataFromFirebase();
+            } catch (error) {
+                console.error("Erro ao salvar nova regra de comissão:", error);
+                alert("Ocorreu um erro ao salvar a nova regra.");
+            }
+        });
+    }
+
+    if (escopoAluguelSelect) {
+        escopoAluguelSelect.addEventListener('change', () => {
+            if (escopoAluguelSelect.value === 'tipo-loja') {
+                tipoLojaAluguelContainer.classList.remove('hidden');
+                lojaEspecificaAluguelContainer.classList.add('hidden');
+            } else {
+                tipoLojaAluguelContainer.classList.add('hidden');
+                lojaEspecificaAluguelContainer.classList.remove('hidden');
+            }
+        });
+    }
+
+    if (formNovoValorAluguel) {
+        formNovoValorAluguel.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const novoValor = {
+                valorAluguelMensal: parseFloat(document.getElementById('regra-aluguel-valor').value),
+                dataInicioVigencia: firebase.firestore.Timestamp.fromDate(new Date(document.getElementById('regra-aluguel-data-inicio').value + 'T00:00:00'))
+            };
+            if (escopoAluguelSelect.value === 'tipo-loja') {
+                novoValor.tipoLoja = document.getElementById('regra-aluguel-tipo-loja').value;
+            } else {
+                novoValor.lojaId = document.getElementById('regra-aluguel-loja-id').value;
+            }
+            try {
+                await db.collection('historicoAluguel').add(novoValor);
+                const feedbackMsg = document.getElementById('aluguel-regra-feedback-msg');
+                feedbackMsg.textContent = 'Novo valor de aluguel salvo com sucesso!';
+                feedbackMsg.className = 'loja-success-msg';
+                feedbackMsg.classList.remove('hidden');
+                formNovoValorAluguel.reset();
+                escopoAluguelSelect.dispatchEvent(new Event('change'));
+                await loadDataFromFirebase();
+            } catch (error) {
+                console.error("Erro ao salvar novo valor de aluguel:", error);
+                alert("Ocorreu um erro ao salvar o novo valor.");
+            }
+        });
+    }
+
+// ==========================================================
+//                        FIM DA AÇÃO
+// ==========================================================
+
+
 }
 // ==========================================================
 //                        FIM DA AÇÃO
